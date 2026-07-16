@@ -1453,6 +1453,8 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - react-native-maps (1.29.0):
+    - react-native-maps/Maps (= 1.29.0)
   - react-native-maps/Generated (1.29.0):
     - hermes-engine
     - RCTRequired
@@ -2295,6 +2297,7 @@ DEPENDENCIES:
   - React-Mapbuffer (from `../node_modules/react-native/ReactCommon`)
   - React-microtasksnativemodule (from `../node_modules/react-native/ReactCommon/react/nativemodule/microtasks`)
   - React-mutationobservernativemodule (from `../node_modules/react-native/ReactCommon/react/nativemodule/mutationobserver`)
+  - react-native-maps (from `../node_modules/react-native-maps`)
   - react-native-maps/Google (from `../node_modules/react-native-maps`)
   - "react-native-netinfo (from `../node_modules/@react-native-community/netinfo`)"
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
@@ -2600,6 +2603,6 @@ SPEC CHECKSUMS:
   RNWorklets: 56302393ae30a143943e2605fb0d2fd4ba745736
   Yoga: 94172d87dd5d83fc929bf1ee53121b5d4490b5f2
 
-PODFILE CHECKSUM: 04bae1d45b60900f2f7b6946ac0455595b7ca59a
+PODFILE CHECKSUM: 16c8558e644392ace6fbe7fc696c23e3a01a678a
 
 COCOAPODS: 1.15.2

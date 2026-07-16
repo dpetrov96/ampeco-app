@@ -23,7 +23,7 @@ export function MapHeaderButtons({ navigation }: Props) {
         accessibilityRole="button"
         accessibilityLabel="Open settings menu"
         onPress={openLeftDrawer}
-        style={styles.button}
+        style={({ pressed }) => [styles.button, pressed && styles.pressed]}
       >
         <Text style={styles.icon}>☰</Text>
       </Pressable>
@@ -31,7 +31,7 @@ export function MapHeaderButtons({ navigation }: Props) {
         accessibilityRole="button"
         accessibilityLabel="Open filters menu"
         onPress={openRightDrawer}
-        style={styles.button}
+        style={({ pressed }) => [styles.button, pressed && styles.pressed]}
       >
         <Text style={styles.icon}>⚙</Text>
       </Pressable>
@@ -50,20 +50,24 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   button: {
-    width: 44,
-    height: 44,
-    borderRadius: 8,
-    backgroundColor: '#ffffff',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#1C2430',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 3,
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 6,
+  },
+  pressed: {
+    opacity: 0.85,
   },
   icon: {
-    fontSize: 22,
-    color: '#111827',
+    fontSize: 20,
+    color: '#ffffff',
+    lineHeight: 22,
   },
 });

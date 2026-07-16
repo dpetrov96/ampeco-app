@@ -50,10 +50,11 @@ npm run ios
 
 ### Google Maps API key
 
-Replace `YOUR_GOOGLE_MAPS_API_KEY` in:
+1. Copy `mobile/.env.example` to `mobile/.env`
+2. Set `GOOGLE_MAPS_API_KEY=...` (file is gitignored)
 
-- iOS: [`mobile/ios/AmpecoPins/Info.plist`](mobile/ios/AmpecoPins/Info.plist) (`GMSApiKey`)
-- Android: [`mobile/android/app/src/main/AndroidManifest.xml`](mobile/android/app/src/main/AndroidManifest.xml)
+- iOS: `npm run ios` runs `sync-maps-key` and writes the key into `Info.plist` locally. Do not commit that change.
+- Android: Gradle reads `.env` at build time via `manifestPlaceholders`.
 
 ## 3. Android
 

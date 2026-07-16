@@ -17,7 +17,9 @@ end
 target 'AmpecoPins' do
   config = use_native_modules!
 
-  pod 'react-native-maps/Google', :path => '../node_modules/react-native-maps'
+  # Autolinking adds the default Maps subspec; Google pulls in Maps SDK + Fabric views.
+  rn_maps_path = '../node_modules/react-native-maps'
+  pod 'react-native-maps', :path => rn_maps_path, :subspecs => ['Google']
 
   use_react_native!(
     :path => config[:reactNativePath],
