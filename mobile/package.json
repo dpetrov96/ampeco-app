@@ -5,7 +5,7 @@
   "scripts": {
     "sync-maps-key": "node scripts/sync-maps-key.js",
     "android": "react-native run-android",
-    "ios": "npm run sync-maps-key && react-native run-ios",
+    "ios": "npm run sync-maps-key && react-native run-ios; npm run sync-maps-key -- --clear",
     "lint": "eslint .",
     "start": "react-native start",
     "test": "jest",
