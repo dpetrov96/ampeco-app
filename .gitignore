@@ -1,0 +1,62 @@
+# Dependencies
+node_modules/
+
+# React Native / Metro
+.expo/
+dist/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Native / build
+*.log
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+.metro-health-check*
+
+# iOS
+mobile/ios/Pods/
+mobile/ios/build/
+mobile/ios/*.xcworkspace/xcuserdata/
+mobile/ios/*.xcodeproj/xcuserdata/
+mobile/ios/*.xcodeproj/project.xcworkspace/xcuserdata/
+**/DerivedData/
+
+# Android
+mobile/android/.gradle/
+mobile/android/app/build/
+mobile/android/build/
+mobile/android/local.properties
+*.apk
+*.aab
+*.hprof
+
+# OS / IDE
+.DS_Store
+*.pem
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# TypeScript
+*.tsbuildinfo
+
+# Testing
+coverage/
+
+# Migration leftovers
+.rn-migrate-backup/
+mobile-expo-old/
+.expo-home/
+
+mobile/vendor/

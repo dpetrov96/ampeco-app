@@ -1,0 +1,77 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { combineReducers, configureStore } from '@reduxjs/toolkit';
+import { setupListeners } from '@reduxjs/toolkit/query';
+import NetInfo from '@react-native-community/netinfo';
+import { AppState } from 'react-native';
+import {
+  FLUSH,
+  PAUSE,
+  PERSIST,
+  PURGE,
+  REGISTER,
+  REHYDRATE,
+  persistReducer,
+  persistStore,
+} from 'redux-persist';
+
+import { api } from '../api';
+import filtersReducer from './slices/filtersSlice';
+import networkReducer from './slices/networkSlice';
+import settingsReducer from './slices/settingsSlice';
+
+const rootReducer = combineReducers({
+  [api.reducerPath]: api.reducer,
+  filters: filtersReducer,
+  settings: settingsReducer,
+  network: networkReducer,
+});
+
+const persistConfig = {
+  key: 'root',
+  storage: AsyncStorage,
+  whitelist: ['settings', api.reducerPath],
+};
+
+const persistedReducer = persistReducer(persistConfig, rootReducer);
+
+export const store = configureStore({
+  reducer: persistedReducer,
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+        ignoredPaths: [`${api.reducerPath}.queries`],
+      },
+    }).concat(api.middleware),
+});
+
+export const persistor = persistStore(store);
+
+setupListeners(store.dispatch, (dispatch, actions) => {
+  const appStateSub = AppState.addEventListener('change', (status) => {
+    if (status === 'active') {
+      dispatch(actions.onFocus());
+    } else {
+      dispatch(actions.onFocusLost());
+    }
+  });
+
+  const unsubscribeNetInfo = NetInfo.addEventListener((state) => {
+    const online = Boolean(
+      state.isConnected && state.isInternetReachable !== false,
+    );
+    if (online) {
+      dispatch(actions.onOnline());
+    } else {
+      dispatch(actions.onOffline());
+    }
+  });
+
+  return () => {
+    appStateSub.remove();
+    unsubscribeNetInfo();
+  };
+});
+
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
