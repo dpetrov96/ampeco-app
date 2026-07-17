@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   mobile:
-    name: Mobile tests
+    name: Mobile CI
     runs-on: ubuntu-latest
     defaults:
       run:
