@@ -1,14 +1,38 @@
 import Geolocation from '@react-native-community/geolocation';
 import { PermissionsAndroid, Platform } from 'react-native';
 
+Geolocation.setRNConfiguration({
+  skipPermissionRequests: false,
+  authorizationLevel: 'whenInUse',
+});
+
+const POSITION_TIMEOUT_MS = 10000;
+
+function withTimeout<T>(
+  promise: Promise<T>,
+  ms: number,
+  message: string,
+): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(message)), ms);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
+
 export async function ensureLocationPermission(): Promise<boolean> {
   if (Platform.OS === 'ios') {
-    return new Promise((resolve) => {
-      Geolocation.requestAuthorization(
-        () => resolve(true),
-        () => resolve(false),
-      );
-    });
+    // requestAuthorization callbacks often never fire on iOS when status is
+    // already determined. getCurrentPosition prompts / fails itself.
+    return true;
   }
 
   const result = await PermissionsAndroid.request(
@@ -24,7 +48,7 @@ export async function ensureLocationPermission(): Promise<boolean> {
   return result === PermissionsAndroid.RESULTS.GRANTED;
 }
 
-export function getCurrentPositionCoords(): Promise<{
+function readPosition(enableHighAccuracy: boolean): Promise<{
   latitude: number;
   longitude: number;
 }> {
@@ -38,10 +62,29 @@ export function getCurrentPositionCoords(): Promise<{
       },
       (error) => reject(error),
       {
-        enableHighAccuracy: false,
-        timeout: 12000,
+        enableHighAccuracy,
+        timeout: POSITION_TIMEOUT_MS,
         maximumAge: 60000,
       },
     );
   });
+}
+
+export async function getCurrentPositionCoords(): Promise<{
+  latitude: number;
+  longitude: number;
+}> {
+  try {
+    return await withTimeout(
+      readPosition(true),
+      POSITION_TIMEOUT_MS + 1500,
+      'Location request timed out.',
+    );
+  } catch {
+    return withTimeout(
+      readPosition(false),
+      POSITION_TIMEOUT_MS + 1500,
+      'Location request timed out.',
+    );
+  }
 }

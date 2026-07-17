@@ -120,6 +120,16 @@ export function FilterDrawerContent(props: DrawerContentComponentProps) {
     }
   }, [drawerStatus]);
 
+  // Commit only after the drawer is fully closed. Applying ~20k pins mid-close
+  // freezes the animation and can snap the filters drawer back open on map taps.
+  useEffect(() => {
+    if (!isApplying || drawerStatus !== 'closed') {
+      return;
+    }
+    dispatch(commitApplyFilters());
+    dispatch(finishApplyFilters());
+  }, [drawerStatus, isApplying, dispatch]);
+
   const toggleType = (type: ConnectorType) => {
     setTypes((current) => {
       if (current.includes(type)) {
@@ -151,13 +161,6 @@ export function FilterDrawerContent(props: DrawerContentComponentProps) {
 
     dispatch(requestApplyFilters({ types, statuses }));
     props.navigation.closeDrawer();
-
-    // Commit after close animation starts. Avoid InteractionManager — map
-    // updates keep it pending and previously cancelled finish left the drawer stuck.
-    setTimeout(() => {
-      dispatch(commitApplyFilters());
-      dispatch(finishApplyFilters());
-    }, 220);
   };
 
   return (

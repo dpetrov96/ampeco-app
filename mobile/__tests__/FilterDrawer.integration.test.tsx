@@ -1,5 +1,6 @@
 import type { DrawerContentComponentProps } from '@react-navigation/drawer';
-import { act, render, screen, userEvent } from '@testing-library/react-native';
+import { useDrawerStatus } from '@react-navigation/drawer';
+import { render, screen, userEvent } from '@testing-library/react-native';
 import { Provider } from 'react-redux';
 
 import { FilterDrawerContent } from '@/components/FilterDrawerContent';
@@ -46,13 +47,19 @@ function drawerProps(
 }
 
 describe('FilterDrawerContent (integration)', () => {
+  const mockDrawerStatus = useDrawerStatus as unknown as jest.Mock;
+
+  afterEach(() => {
+    mockDrawerStatus.mockReturnValue('open');
+  });
+
   it('Apply closes the drawer and commits filters', async () => {
-    jest.useFakeTimers();
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    mockDrawerStatus.mockReturnValue('open');
+    const user = userEvent.setup();
     const { store } = createTestStore();
     const props = drawerProps();
 
-    await render(
+    const view = await render(
       <Provider store={store}>
         <FilterDrawerContent {...props} />
       </Provider>,
@@ -73,16 +80,17 @@ describe('FilterDrawerContent (integration)', () => {
       statuses: [ConnectorStatus.Available],
     });
 
-    await act(async () => {
-      jest.advanceTimersByTime(250);
-    });
+    mockDrawerStatus.mockReturnValue('closed');
+    await view.rerender(
+      <Provider store={store}>
+        <FilterDrawerContent {...props} />
+      </Provider>,
+    );
 
     expect(store.getState().filters.isApplying).toBe(false);
     expect(store.getState().filters.applied).toEqual({
       types: [ConnectorType.Type2],
       statuses: [ConnectorStatus.Available],
     });
-
-    jest.useRealTimers();
   });
 });
