@@ -1,7 +1,7 @@
 import { Image, StyleSheet, Text, View } from 'react-native';
 
 import type { PinStyle } from '@/types/settings';
-import { AMPECO_BLUE } from '@/components/AmpecoLoader';
+import { AMPECO_BLUE } from '@/theme/colors';
 
 export type PinPowerLabel = 'AC' | 'DC' | 'AC/DC';
 

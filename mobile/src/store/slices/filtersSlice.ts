@@ -13,8 +13,9 @@ export type FilterSelection = {
 };
 
 type FiltersState = {
-  draft: FilterSelection;
   applied: FilterSelection;
+  /** Selection waiting to be committed after the apply overlay/drawer close. */
+  pending: FilterSelection | null;
   isApplying: boolean;
 };
 
@@ -24,14 +25,11 @@ const allFilters: FilterSelection = {
 };
 
 const initialState: FiltersState = {
-  draft: {
-    types: [...allFilters.types],
-    statuses: [...allFilters.statuses],
-  },
   applied: {
     types: [...allFilters.types],
     statuses: [...allFilters.statuses],
   },
+  pending: null,
   isApplying: false,
 };
 
@@ -39,20 +37,23 @@ const filtersSlice = createSlice({
   name: 'filters',
   initialState,
   reducers: {
-    setDraftFilters(state, action: PayloadAction<FilterSelection>) {
-      state.draft = {
+    /** Drawer commits local UI selection and asks MapScreen to apply it. */
+    requestApplyFilters(state, action: PayloadAction<FilterSelection>) {
+      state.pending = {
         types: [...action.payload.types],
         statuses: [...action.payload.statuses],
       };
-    },
-    beginApplyFilters(state) {
       state.isApplying = true;
     },
-    applyFilters(state) {
-      state.applied = {
-        types: [...state.draft.types],
-        statuses: [...state.draft.statuses],
-      };
+    /** MapScreen commits pending → applied once the UI has settled. */
+    commitApplyFilters(state) {
+      if (state.pending) {
+        state.applied = {
+          types: [...state.pending.types],
+          statuses: [...state.pending.statuses],
+        };
+        state.pending = null;
+      }
     },
     finishApplyFilters(state) {
       state.isApplying = false;
@@ -61,9 +62,8 @@ const filtersSlice = createSlice({
 });
 
 export const {
-  setDraftFilters,
-  beginApplyFilters,
-  applyFilters,
+  requestApplyFilters,
+  commitApplyFilters,
   finishApplyFilters,
 } = filtersSlice.actions;
 

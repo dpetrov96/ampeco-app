@@ -7,32 +7,22 @@ import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
-  type ImageSourcePropType,
   Pressable,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 
-import { AMPECO_BLUE } from '@/components/AmpecoLoader';
+import { CONNECTOR_ICONS } from '@/constants/connectorIcons';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import {
-  beginApplyFilters,
-  setDraftFilters,
-} from '@/store/slices/filtersSlice';
+import { requestApplyFilters } from '@/store/slices/filtersSlice';
+import { AMPECO_BLUE } from '@/theme/colors';
 import {
   CONNECTOR_STATUSES,
   CONNECTOR_TYPES,
-  type ConnectorStatus,
-  type ConnectorType,
+  ConnectorStatus,
+  ConnectorType,
 } from '@/types/pin';
-
-const CONNECTOR_ICONS: Record<ConnectorType, ImageSourcePropType> = {
-  J1772: require('@/assets/connectors/j1772.png'),
-  'Type 2': require('@/assets/connectors/type-2.png'),
-  'CCS 2': require('@/assets/connectors/ccs-2.png'),
-  'Type 3': require('@/assets/connectors/type-3.png'),
-};
 
 function StatusCheckboxRow({
   label,
@@ -109,6 +99,7 @@ export function FilterDrawerContent(props: DrawerContentComponentProps) {
   const isApplying = useAppSelector((state) => state.filters.isApplying);
   const drawerStatus = useDrawerStatus();
 
+  // Local draft only — Redux stores applied (+ pending during apply).
   const [types, setTypes] = useState<ConnectorType[]>(() => [...applied.types]);
   const [statuses, setStatuses] = useState<ConnectorStatus[]>(() => [
     ...applied.statuses,
@@ -149,8 +140,7 @@ export function FilterDrawerContent(props: DrawerContentComponentProps) {
     if (isApplying) {
       return;
     }
-    dispatch(setDraftFilters({ types, statuses }));
-    dispatch(beginApplyFilters());
+    dispatch(requestApplyFilters({ types, statuses }));
   };
 
   return (
@@ -184,7 +174,11 @@ export function FilterDrawerContent(props: DrawerContentComponentProps) {
           {CONNECTOR_STATUSES.map((status: ConnectorStatus, index) => (
             <StatusCheckboxRow
               key={status}
-              label={status === 'available' ? 'Available' : 'Unavailable'}
+              label={
+                status === ConnectorStatus.Available
+                  ? 'Available'
+                  : 'Unavailable'
+              }
               checked={statuses.includes(status)}
               onToggle={() => toggleStatus(status)}
               isLast={index === CONNECTOR_STATUSES.length - 1}

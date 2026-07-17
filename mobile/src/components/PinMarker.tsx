@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { View } from 'react-native';
 import { Marker } from 'react-native-maps';
 
-import type { ConnectorType, Pin } from '@/types/pin';
-import type { PinStyle } from '@/types/settings';
 import { PinGlyph, type PinPowerLabel } from '@/components/PinGlyph';
+import { useMarkerTracksViewChanges } from '@/hooks/useMarkerTracksViewChanges';
+import { ConnectorType, type Pin } from '@/types/pin';
+import type { PinStyle } from '@/types/settings';
 
 type Props = {
   pin: Pin;
@@ -12,8 +13,12 @@ type Props = {
   onPress: (pin: Pin) => void;
 };
 
-const AC_TYPES: ConnectorType[] = ['J1772', 'Type 2', 'Type 3'];
-const DC_TYPES: ConnectorType[] = ['CCS 2'];
+const AC_TYPES: ConnectorType[] = [
+  ConnectorType.J1772,
+  ConnectorType.Type2,
+  ConnectorType.Type3,
+];
+const DC_TYPES: ConnectorType[] = [ConnectorType.Ccs2];
 
 function powerLabel(pin: Pin): PinPowerLabel {
   let hasAc = false;
@@ -38,14 +43,10 @@ function powerLabel(pin: Pin): PinPowerLabel {
 }
 
 export function PinMarker({ pin, pinStyle, onPress }: Props) {
-  const [tracksViewChanges, setTracksViewChanges] = useState(true);
   const label = useMemo(() => powerLabel(pin), [pin]);
-
-  useEffect(() => {
-    setTracksViewChanges(true);
-    const timer = setTimeout(() => setTracksViewChanges(false), 400);
-    return () => clearTimeout(timer);
-  }, [pin._id, label, pinStyle]);
+  const tracksViewChanges = useMarkerTracksViewChanges(
+    `${pin._id}:${label}:${pinStyle}`,
+  );
 
   const anchor =
     pinStyle === 'dot' ? { x: 0.5, y: 0.5 } : { x: 0.5, y: 1 };

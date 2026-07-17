@@ -1,6 +1,14 @@
-export type ConnectorType = 'J1772' | 'Type 2' | 'CCS 2' | 'Type 3';
+export enum ConnectorType {
+  J1772 = 'J1772',
+  Type2 = 'Type 2',
+  Ccs2 = 'CCS 2',
+  Type3 = 'Type 3',
+}
 
-export type ConnectorStatus = 'available' | 'unavailable';
+export enum ConnectorStatus {
+  Available = 'available',
+  Unavailable = 'unavailable',
+}
 
 export type Connector = {
   type: ConnectorType;
@@ -15,14 +23,7 @@ export type Pin = {
   connectors: Connector[];
 };
 
-export const CONNECTOR_TYPES: ConnectorType[] = [
-  'J1772',
-  'Type 2',
-  'CCS 2',
-  'Type 3',
-];
+export const CONNECTOR_TYPES: ConnectorType[] = Object.values(ConnectorType);
 
-export const CONNECTOR_STATUSES: ConnectorStatus[] = [
-  'available',
-  'unavailable',
-];
+export const CONNECTOR_STATUSES: ConnectorStatus[] =
+  Object.values(ConnectorStatus);

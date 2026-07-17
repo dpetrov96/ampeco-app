@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Marker } from 'react-native-maps';
 
-import { AMPECO_BLUE } from '@/components/AmpecoLoader';
+import { useMarkerTracksViewChanges } from '@/hooks/useMarkerTracksViewChanges';
+import { AMPECO_BLUE } from '@/theme/colors';
 
 type Props = {
   id: string;
@@ -39,16 +39,12 @@ export function ClusterMarker({
   count,
   onPress,
 }: Props) {
-  const [tracksViewChanges, setTracksViewChanges] = useState(true);
   const size = clusterSize(count);
   const halo = size + 8;
   const label = formatCount(count);
-
-  useEffect(() => {
-    setTracksViewChanges(true);
-    const timer = setTimeout(() => setTracksViewChanges(false), 400);
-    return () => clearTimeout(timer);
-  }, [count, latitude, longitude]);
+  const tracksViewChanges = useMarkerTracksViewChanges(
+    `${id}:${count}:${latitude}:${longitude}`,
+  );
 
   return (
     <Marker

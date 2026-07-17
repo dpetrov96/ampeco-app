@@ -1,26 +1,41 @@
 import {
   createDrawerNavigator,
-  type DrawerContentComponentProps,
+  type DrawerNavigationProp,
 } from '@react-navigation/drawer';
-import { NavigationContainer } from '@react-navigation/native';
-import { Pressable, Text } from 'react-native';
+import { NavigationContainer, useNavigation } from '@react-navigation/native';
+import { Pressable, StyleSheet, Text } from 'react-native';
 
 import { FilterDrawerContent } from '@/components/FilterDrawerContent';
 import { LeftDrawerContent } from '@/components/LeftDrawerContent';
+import type { LeftDrawerParamList, RightDrawerParamList } from '@/navigation/types';
 import { MapScreen } from '@/screens/MapScreen';
 import { SettingsScreen } from '@/screens/SettingsScreen';
-import type { LeftDrawerParamList, RightDrawerParamList } from '@/navigation/types';
+import { AMPECO_BLUE } from '@/theme/colors';
 
 const LeftDrawer = createDrawerNavigator<LeftDrawerParamList>();
 const RightDrawer = createDrawerNavigator<RightDrawerParamList>();
+
+function SettingsBackButton() {
+  const navigation =
+    useNavigation<DrawerNavigationProp<LeftDrawerParamList>>();
+
+  return (
+    <Pressable
+      onPress={() => navigation.navigate('Map')}
+      style={styles.backButton}
+      accessibilityRole="button"
+      accessibilityLabel="Back to map"
+    >
+      <Text style={styles.backText}>← Map</Text>
+    </Pressable>
+  );
+}
 
 function RightDrawerNavigator() {
   return (
     <RightDrawer.Navigator
       id="RightDrawer"
-      drawerContent={(props: DrawerContentComponentProps) => (
-        <FilterDrawerContent {...props} />
-      )}
+      drawerContent={FilterDrawerContent}
       screenOptions={{
         headerShown: false,
         drawerPosition: 'right',
@@ -41,7 +56,7 @@ export function RootNavigator() {
     <NavigationContainer>
       <LeftDrawer.Navigator
         id="LeftDrawer"
-        drawerContent={(props) => <LeftDrawerContent {...props} />}
+        drawerContent={LeftDrawerContent}
         screenOptions={{
           drawerPosition: 'left',
           drawerType: 'front',
@@ -62,23 +77,24 @@ export function RootNavigator() {
         <LeftDrawer.Screen
           name="Settings"
           component={SettingsScreen}
-          options={({ navigation }) => ({
+          options={{
             title: 'Settings',
             headerStyle: { backgroundColor: '#F2F2F7' },
             headerShadowVisible: false,
-            headerLeft: () => (
-              <Pressable
-                onPress={() => navigation.navigate('Map')}
-                style={{ paddingHorizontal: 16 }}
-                accessibilityRole="button"
-                accessibilityLabel="Back to map"
-              >
-                <Text style={{ fontSize: 16, color: '#0E60C3' }}>← Map</Text>
-              </Pressable>
-            ),
-          })}
+            headerLeft: SettingsBackButton,
+          }}
         />
       </LeftDrawer.Navigator>
     </NavigationContainer>
   );
 }
+
+const styles = StyleSheet.create({
+  backButton: {
+    paddingHorizontal: 16,
+  },
+  backText: {
+    fontSize: 16,
+    color: AMPECO_BLUE,
+  },
+});

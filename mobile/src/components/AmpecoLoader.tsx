@@ -7,6 +7,8 @@ import {
   View,
 } from 'react-native';
 
+import { AMPECO_BLUE } from '@/theme/colors';
+
 type Props = {
   visible?: boolean;
 };
@@ -76,8 +78,6 @@ export function AmpecoLoader({ visible = true }: Props) {
     </View>
   );
 }
-
-export const AMPECO_BLUE = '#0E60C3';
 
 const styles = StyleSheet.create({
   overlay: {

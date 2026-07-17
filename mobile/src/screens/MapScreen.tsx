@@ -12,9 +12,9 @@ import {
 import MapView, { PROVIDER_GOOGLE, type Region } from 'react-native-maps';
 
 import { useGetPinsQuery } from '@/api';
-import { AMPECO_BLUE } from '@/components/AmpecoLoader';
 import { ClusterMarker } from '@/components/ClusterMarker';
 import { MapHeaderButtons } from '@/components/MapHeaderButtons';
+import { MyLocationButton } from '@/components/MyLocationButton';
 import { OfflineBanner } from '@/components/OfflineBanner';
 import { PinBottomSheet } from '@/components/PinBottomSheet';
 import { PinMarker } from '@/components/PinMarker';
@@ -27,7 +27,11 @@ import {
 import { filterPins } from '@/features/map/filterPins';
 import type { RightDrawerParamList } from '@/navigation/types';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { applyFilters, finishApplyFilters } from '@/store/slices/filtersSlice';
+import {
+  commitApplyFilters,
+  finishApplyFilters,
+} from '@/store/slices/filtersSlice';
+import { AMPECO_BLUE } from '@/theme/colors';
 import type { MapRegion } from '@/types/map';
 import type { Pin } from '@/types/pin';
 
@@ -40,10 +44,46 @@ const INITIAL_REGION: MapRegion = {
 };
 
 const REGION_DEBOUNCE_MS = 120;
+const FILTER_COMMIT_DELAY_MS = 40;
 
 // Google Maps Fabric markers are unreliable on iOS New Architecture
 // (clusters stay invisible). Apple Maps renders custom markers correctly.
 const MAP_PROVIDER = Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined;
+
+/**
+ * Runs `commit` after drawer animations settle, then `finish` on the next
+ * paint so the apply overlay covers the heavy cluster recompute.
+ */
+function scheduleAfterDrawerSettle(
+  commit: () => void,
+  finish: () => void,
+): () => void {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  let raf1 = 0;
+  let raf2 = 0;
+
+  const handle = InteractionManager.runAfterInteractions(() => {
+    timeoutId = setTimeout(() => {
+      commit();
+      raf1 = requestAnimationFrame(() => {
+        raf2 = requestAnimationFrame(finish);
+      });
+    }, FILTER_COMMIT_DELAY_MS);
+  });
+
+  return () => {
+    handle.cancel();
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+    if (raf1) {
+      cancelAnimationFrame(raf1);
+    }
+    if (raf2) {
+      cancelAnimationFrame(raf2);
+    }
+  };
+}
 
 export function MapScreen() {
   const navigation =
@@ -66,33 +106,10 @@ export function MapScreen() {
 
     navigation.dispatch(DrawerActions.closeDrawer());
 
-    let timeoutId: ReturnType<typeof setTimeout> | undefined;
-    let raf1 = 0;
-    let raf2 = 0;
-
-    const handle = InteractionManager.runAfterInteractions(() => {
-      timeoutId = setTimeout(() => {
-        dispatch(applyFilters());
-        raf1 = requestAnimationFrame(() => {
-          raf2 = requestAnimationFrame(() => {
-            dispatch(finishApplyFilters());
-          });
-        });
-      }, 40);
-    });
-
-    return () => {
-      handle.cancel();
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-      if (raf1) {
-        cancelAnimationFrame(raf1);
-      }
-      if (raf2) {
-        cancelAnimationFrame(raf2);
-      }
-    };
+    return scheduleAfterDrawerSettle(
+      () => dispatch(commitApplyFilters()),
+      () => dispatch(finishApplyFilters()),
+    );
   }, [isApplyingFilters, dispatch, navigation]);
 
   const filteredPins = useMemo(
@@ -159,6 +176,11 @@ export function MapScreen() {
     setSelectedPin(pin);
   };
 
+  const onMyLocation = (next: MapRegion) => {
+    mapRef.current?.animateToRegion(next, 400);
+    setRegion(next);
+  };
+
   return (
     <View style={styles.container}>
       <OfflineBanner />
@@ -168,6 +190,8 @@ export function MapScreen() {
         provider={MAP_PROVIDER}
         initialRegion={INITIAL_REGION}
         onRegionChangeComplete={onRegionChangeComplete}
+        showsUserLocation
+        showsMyLocationButton={false}
         zoomEnabled
         scrollEnabled
         pitchEnabled={false}
@@ -199,6 +223,10 @@ export function MapScreen() {
       </MapView>
 
       <MapHeaderButtons navigation={navigation} />
+      <MyLocationButton
+        onLocate={onMyLocation}
+        bottomOffset={selectedPin ? 280 : 0}
+      />
 
       {emptyViewport ? (
         <View style={styles.statusBadge}>
@@ -218,7 +246,10 @@ export function MapScreen() {
         </View>
       ) : null}
 
-      <PinBottomSheet pin={selectedPin} />
+      <PinBottomSheet
+        pin={selectedPin}
+        onClose={() => setSelectedPin(null)}
+      />
 
       {isApplyingFilters ? (
         <View style={styles.loadingOverlay} pointerEvents="auto">

@@ -2,7 +2,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { DrawerNavigationProp } from '@react-navigation/drawer';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { AMPECO_BLUE } from '@/components/AmpecoLoader';
+import { AMPECO_BLUE } from '@/theme/colors';
 import { PinGlyph } from '@/components/PinGlyph';
 import type { LeftDrawerParamList } from '@/navigation/types';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';

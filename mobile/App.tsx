@@ -8,10 +8,11 @@ import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 
 import { useGetPinsQuery } from '@/api';
-import { AmpecoLoader, AMPECO_BLUE } from '@/components/AmpecoLoader';
+import { AmpecoLoader } from '@/components/AmpecoLoader';
 import { useNetworkSync } from '@/hooks/useNetworkSync';
 import { RootNavigator } from '@/navigation/RootNavigator';
 import { persistor, store } from '@/store';
+import { AMPECO_BLUE } from '@/theme/colors';
 
 const MIN_SPLASH_MS = 1400;
 

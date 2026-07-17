@@ -8,13 +8,16 @@ import {
 } from '@/features/map/clusterPins';
 import { regionToZoom } from '@/features/map/regionZoom';
 import type { Pin } from '@/types/pin';
+import { ConnectorStatus, ConnectorType } from '@/types/pin';
 import type { MapRegion } from '@/types/map';
 
 const makePin = (
   overrides: Partial<Pin> & Pick<Pin, '_id' | 'latitude' | 'longitude'>,
 ): Pin => ({
   title: 'Test',
-  connectors: [{ type: 'Type 2', status: 'available' }],
+  connectors: [
+    { type: ConnectorType.Type2, status: ConnectorStatus.Available },
+  ],
   ...overrides,
 });
 
