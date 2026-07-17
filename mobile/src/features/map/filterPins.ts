@@ -1,5 +1,5 @@
-import type { FilterSelection } from '../../store/slices/filtersSlice';
-import type { Pin } from '../../types/pin';
+import type { FilterSelection } from '@/store/slices/filtersSlice';
+import type { Pin } from '@/types/pin';
 
 export function filterPins(pins: Pin[], filters: FilterSelection): Pin[] {
   const typeSet = new Set(filters.types);

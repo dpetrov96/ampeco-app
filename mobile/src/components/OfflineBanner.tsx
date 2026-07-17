@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { useAppSelector } from '../store/hooks';
+import { useAppSelector } from '@/store/hooks';
 
 export function OfflineBanner() {
   const isConnected = useAppSelector((state) => state.network.isConnected);

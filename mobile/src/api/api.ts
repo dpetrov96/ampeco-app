@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
-import type { Pin } from '../types/pin';
-import { getApiBaseUrl } from '../utils/apiHost';
+import type { Pin } from '@/types/pin';
+import { getApiBaseUrl } from '@/utils/apiHost';
 
 export const api = createApi({
   reducerPath: 'api',

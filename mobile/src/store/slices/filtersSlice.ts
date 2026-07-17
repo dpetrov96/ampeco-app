@@ -5,7 +5,7 @@ import {
   CONNECTOR_TYPES,
   type ConnectorStatus,
   type ConnectorType,
-} from '../../types/pin';
+} from '@/types/pin';
 
 export type FilterSelection = {
   types: ConnectorType[];

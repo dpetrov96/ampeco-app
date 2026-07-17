@@ -1,4 +1,4 @@
-import type { MapBounds, MapRegion } from '../types/map';
+import type { MapBounds, MapRegion } from '@/types/map';
 
 export function regionToBounds(region: MapRegion): MapBounds {
   const halfLat = region.latitudeDelta / 2;

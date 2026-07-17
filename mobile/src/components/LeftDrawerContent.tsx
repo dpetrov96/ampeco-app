@@ -23,7 +23,7 @@ export function LeftDrawerContent(props: DrawerContentComponentProps) {
           accessibilityLabel="Open settings"
         >
           <Image
-            source={require('../assets/icons/settings.png')}
+            source={require('@/assets/icons/settings.png')}
             style={styles.icon}
             resizeMode="contain"
           />

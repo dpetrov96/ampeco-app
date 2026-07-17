@@ -2,9 +2,9 @@ import {
   CONNECTOR_STATUSES,
   CONNECTOR_TYPES,
   type Pin,
-} from '../src/types/pin';
-import type { MapRegion } from '../src/types/map';
-import { selectVisiblePins } from '../src/features/map/selectVisiblePins';
+} from '@/types/pin';
+import type { MapRegion } from '@/types/map';
+import { selectVisiblePins } from '@/features/map/selectVisiblePins';
 
 const region: MapRegion = {
   latitude: 42.7,

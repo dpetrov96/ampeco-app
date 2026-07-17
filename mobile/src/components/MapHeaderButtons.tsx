@@ -2,7 +2,7 @@ import { DrawerActions } from '@react-navigation/native';
 import type { DrawerNavigationProp } from '@react-navigation/drawer';
 import { Image, Pressable, StyleSheet, View } from 'react-native';
 
-import type { RightDrawerParamList } from '../navigation/types';
+import type { RightDrawerParamList } from '@/navigation/types';
 
 type Props = {
   navigation: DrawerNavigationProp<RightDrawerParamList, 'MapMain'>;
@@ -26,7 +26,7 @@ export function MapHeaderButtons({ navigation }: Props) {
         style={({ pressed }) => [styles.button, pressed && styles.pressed]}
       >
         <Image
-          source={require('../assets/icons/settings.png')}
+          source={require('@/assets/icons/settings.png')}
           style={styles.icon}
           resizeMode="contain"
         />
@@ -38,7 +38,7 @@ export function MapHeaderButtons({ navigation }: Props) {
         style={({ pressed }) => [styles.button, pressed && styles.pressed]}
       >
         <Image
-          source={require('../assets/icons/filter.png')}
+          source={require('@/assets/icons/filter.png')}
           style={styles.icon}
           resizeMode="contain"
         />

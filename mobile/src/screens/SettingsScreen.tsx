@@ -2,12 +2,12 @@ import { useNavigation } from '@react-navigation/native';
 import type { DrawerNavigationProp } from '@react-navigation/drawer';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { AMPECO_BLUE } from '../components/AmpecoLoader';
-import { PinGlyph } from '../components/PinGlyph';
-import type { LeftDrawerParamList } from '../navigation/types';
-import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { setPinStyle } from '../store/slices/settingsSlice';
-import { PIN_STYLES, type PinStyle } from '../types/settings';
+import { AMPECO_BLUE } from '@/components/AmpecoLoader';
+import { PinGlyph } from '@/components/PinGlyph';
+import type { LeftDrawerParamList } from '@/navigation/types';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { setPinStyle } from '@/store/slices/settingsSlice';
+import { PIN_STYLES, type PinStyle } from '@/types/settings';
 
 const STYLE_COPY: Record<PinStyle, { title: string; subtitle: string }> = {
   pin: {

@@ -67,7 +67,7 @@ export function AmpecoLoader({ visible = true }: Props) {
     <View style={styles.overlay}>
       <Animated.View style={{ transform: [{ scale }], opacity }}>
         <Image
-          source={require('../../assets/ampeco-mark-white.png')}
+          source={require('@root-assets/ampeco-mark-white.png')}
           style={styles.logo}
           resizeMode="contain"
           accessibilityLabel="Loading"

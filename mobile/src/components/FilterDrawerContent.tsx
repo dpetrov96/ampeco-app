@@ -14,24 +14,24 @@ import {
   View,
 } from 'react-native';
 
-import { AMPECO_BLUE } from './AmpecoLoader';
-import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { AMPECO_BLUE } from '@/components/AmpecoLoader';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
   beginApplyFilters,
   setDraftFilters,
-} from '../store/slices/filtersSlice';
+} from '@/store/slices/filtersSlice';
 import {
   CONNECTOR_STATUSES,
   CONNECTOR_TYPES,
   type ConnectorStatus,
   type ConnectorType,
-} from '../types/pin';
+} from '@/types/pin';
 
 const CONNECTOR_ICONS: Record<ConnectorType, ImageSourcePropType> = {
-  J1772: require('../assets/connectors/j1772.png'),
-  'Type 2': require('../assets/connectors/type-2.png'),
-  'CCS 2': require('../assets/connectors/ccs-2.png'),
-  'Type 3': require('../assets/connectors/type-3.png'),
+  J1772: require('@/assets/connectors/j1772.png'),
+  'Type 2': require('@/assets/connectors/type-2.png'),
+  'CCS 2': require('@/assets/connectors/ccs-2.png'),
+  'Type 3': require('@/assets/connectors/type-3.png'),
 };
 
 function StatusCheckboxRow({

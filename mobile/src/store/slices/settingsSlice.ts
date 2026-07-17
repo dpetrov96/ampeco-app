@@ -1,6 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
-import type { PinStyle } from '../../types/settings';
+import type { PinStyle } from '@/types/settings';
 
 type SettingsState = {
   pinStyle: PinStyle;

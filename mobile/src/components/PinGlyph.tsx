@@ -1,7 +1,7 @@
 import { Image, StyleSheet, Text, View } from 'react-native';
 
-import type { PinStyle } from '../types/settings';
-import { AMPECO_BLUE } from './AmpecoLoader';
+import type { PinStyle } from '@/types/settings';
+import { AMPECO_BLUE } from '@/components/AmpecoLoader';
 
 export type PinPowerLabel = 'AC' | 'DC' | 'AC/DC';
 
@@ -28,7 +28,7 @@ export function PinGlyph({ style, powerLabel = 'AC' }: Props) {
         <View style={styles.dotHalo}>
           <View style={styles.dotCore}>
             <Image
-              source={require('../../assets/ampeco-mark-white.png')}
+              source={require('@root-assets/ampeco-mark-white.png')}
               style={styles.dotLogo}
               resizeMode="contain"
             />
@@ -41,7 +41,7 @@ export function PinGlyph({ style, powerLabel = 'AC' }: Props) {
   return (
     <View style={styles.pinWrap}>
       <Image
-        source={require('../assets/pins/pin-body.png')}
+        source={require('@/assets/pins/pin-body.png')}
         style={styles.pinBody}
         resizeMode="contain"
       />

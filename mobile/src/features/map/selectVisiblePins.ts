@@ -1,8 +1,8 @@
-import type { Pin } from '../../types/pin';
-import type { MapRegion } from '../../types/map';
-import type { FilterSelection } from '../../store/slices/filtersSlice';
-import { isCoordinateInBounds, regionToBounds } from '../../utils/mapBounds';
-import { filterPins } from './filterPins';
+import type { Pin } from '@/types/pin';
+import type { MapRegion } from '@/types/map';
+import type { FilterSelection } from '@/store/slices/filtersSlice';
+import { isCoordinateInBounds, regionToBounds } from '@/utils/mapBounds';
+import { filterPins } from '@/features/map/filterPins';
 
 export function selectVisiblePins(
   pins: Pin[],

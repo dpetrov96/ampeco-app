@@ -2,9 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { Marker } from 'react-native-maps';
 
-import type { ConnectorType, Pin } from '../types/pin';
-import type { PinStyle } from '../types/settings';
-import { PinGlyph, type PinPowerLabel } from './PinGlyph';
+import type { ConnectorType, Pin } from '@/types/pin';
+import type { PinStyle } from '@/types/settings';
+import { PinGlyph, type PinPowerLabel } from '@/components/PinGlyph';
 
 type Props = {
   pin: Pin;

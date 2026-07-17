@@ -5,11 +5,11 @@ import {
 import { NavigationContainer } from '@react-navigation/native';
 import { Pressable, Text } from 'react-native';
 
-import { FilterDrawerContent } from '../components/FilterDrawerContent';
-import { LeftDrawerContent } from '../components/LeftDrawerContent';
-import { MapScreen } from '../screens/MapScreen';
-import { SettingsScreen } from '../screens/SettingsScreen';
-import type { LeftDrawerParamList, RightDrawerParamList } from './types';
+import { FilterDrawerContent } from '@/components/FilterDrawerContent';
+import { LeftDrawerContent } from '@/components/LeftDrawerContent';
+import { MapScreen } from '@/screens/MapScreen';
+import { SettingsScreen } from '@/screens/SettingsScreen';
+import type { LeftDrawerParamList, RightDrawerParamList } from '@/navigation/types';
 
 const LeftDrawer = createDrawerNavigator<LeftDrawerParamList>();
 const RightDrawer = createDrawerNavigator<RightDrawerParamList>();

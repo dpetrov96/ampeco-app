@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Marker } from 'react-native-maps';
 
-import { AMPECO_BLUE } from './AmpecoLoader';
+import { AMPECO_BLUE } from '@/components/AmpecoLoader';
 
 type Props = {
   id: string;

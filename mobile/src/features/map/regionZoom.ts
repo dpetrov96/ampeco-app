@@ -1,4 +1,4 @@
-import type { MapRegion } from '../../types/map';
+import type { MapRegion } from '@/types/map';
 
 /** Approximate Google Maps zoom level from a react-native-maps region. */
 export function regionToZoom(region: MapRegion): number {

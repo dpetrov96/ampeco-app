@@ -11,25 +11,25 @@ import {
 } from 'react-native';
 import MapView, { PROVIDER_GOOGLE, type Region } from 'react-native-maps';
 
-import { useGetPinsQuery } from '../api';
-import { AMPECO_BLUE } from '../components/AmpecoLoader';
-import { ClusterMarker } from '../components/ClusterMarker';
-import { MapHeaderButtons } from '../components/MapHeaderButtons';
-import { OfflineBanner } from '../components/OfflineBanner';
-import { PinBottomSheet } from '../components/PinBottomSheet';
-import { PinMarker } from '../components/PinMarker';
+import { useGetPinsQuery } from '@/api';
+import { AMPECO_BLUE } from '@/components/AmpecoLoader';
+import { ClusterMarker } from '@/components/ClusterMarker';
+import { MapHeaderButtons } from '@/components/MapHeaderButtons';
+import { OfflineBanner } from '@/components/OfflineBanner';
+import { PinBottomSheet } from '@/components/PinBottomSheet';
+import { PinMarker } from '@/components/PinMarker';
 import {
   createPinClusterIndex,
   getClusterExpansionRegion,
   getClustersForRegion,
   getPinFocusRegion,
-} from '../features/map/clusterPins';
-import { filterPins } from '../features/map/filterPins';
-import type { RightDrawerParamList } from '../navigation/types';
-import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { applyFilters, finishApplyFilters } from '../store/slices/filtersSlice';
-import type { MapRegion } from '../types/map';
-import type { Pin } from '../types/pin';
+} from '@/features/map/clusterPins';
+import { filterPins } from '@/features/map/filterPins';
+import type { RightDrawerParamList } from '@/navigation/types';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { applyFilters, finishApplyFilters } from '@/store/slices/filtersSlice';
+import type { MapRegion } from '@/types/map';
+import type { Pin } from '@/types/pin';
 
 // Pins in the interview dataset are scattered worldwide (not centered on Sofia).
 const INITIAL_REGION: MapRegion = {

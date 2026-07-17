@@ -2,4 +2,4 @@ export {
   api,
   useGetPinsQuery,
   useLazyGetPinsQuery,
-} from './api';
+} from '@/api/api';

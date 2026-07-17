@@ -5,10 +5,10 @@ import {
   getClustersForRegion,
   getPinFocusRegion,
   type MapClusterItem,
-} from '../src/features/map/clusterPins';
-import { regionToZoom } from '../src/features/map/regionZoom';
-import type { Pin } from '../src/types/pin';
-import type { MapRegion } from '../src/types/map';
+} from '@/features/map/clusterPins';
+import { regionToZoom } from '@/features/map/regionZoom';
+import type { Pin } from '@/types/pin';
+import type { MapRegion } from '@/types/map';
 
 const makePin = (
   overrides: Partial<Pin> & Pick<Pin, '_id' | 'latitude' | 'longitude'>,

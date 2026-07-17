@@ -14,10 +14,10 @@ import {
   persistStore,
 } from 'redux-persist';
 
-import { api } from '../api';
-import filtersReducer from './slices/filtersSlice';
-import networkReducer from './slices/networkSlice';
-import settingsReducer from './slices/settingsSlice';
+import { api } from '@/api';
+import filtersReducer from '@/store/slices/filtersSlice';
+import networkReducer from '@/store/slices/networkSlice';
+import settingsReducer from '@/store/slices/settingsSlice';
 
 const rootReducer = combineReducers({
   [api.reducerPath]: api.reducer,

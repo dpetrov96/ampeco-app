@@ -1,9 +1,9 @@
 import Supercluster from 'supercluster';
 
-import type { MapRegion } from '../../types/map';
-import type { Pin } from '../../types/pin';
-import { regionToBounds } from '../../utils/mapBounds';
-import { regionToZoom, zoomToLongitudeDelta } from './regionZoom';
+import type { MapRegion } from '@/types/map';
+import type { Pin } from '@/types/pin';
+import { regionToBounds } from '@/utils/mapBounds';
+import { regionToZoom, zoomToLongitudeDelta } from '@/features/map/regionZoom';
 
 export type PinPointProperties = {
   pinId: string;

@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import type { Pin } from '../types/pin';
+import type { Pin } from '@/types/pin';
 
 type Props = {
   pin: Pin | null;

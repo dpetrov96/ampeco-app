@@ -7,11 +7,11 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 
-import { useGetPinsQuery } from './src/api';
-import { AmpecoLoader, AMPECO_BLUE } from './src/components/AmpecoLoader';
-import { useNetworkSync } from './src/hooks/useNetworkSync';
-import { RootNavigator } from './src/navigation/RootNavigator';
-import { persistor, store } from './src/store';
+import { useGetPinsQuery } from '@/api';
+import { AmpecoLoader, AMPECO_BLUE } from '@/components/AmpecoLoader';
+import { useNetworkSync } from '@/hooks/useNetworkSync';
+import { RootNavigator } from '@/navigation/RootNavigator';
+import { persistor, store } from '@/store';
 
 const MIN_SPLASH_MS = 1400;
 
