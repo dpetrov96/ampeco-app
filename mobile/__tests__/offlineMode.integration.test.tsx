@@ -59,7 +59,7 @@ function mockPinsResponse(pins: Pin[]) {
 }
 
 describe('offline mode (integration)', () => {
-  const originalFetch = global.fetch;
+  const originalFetch = globalThis.fetch;
 
   beforeEach(async () => {
     await AsyncStorage.clear();
@@ -67,7 +67,7 @@ describe('offline mode (integration)', () => {
   });
 
   afterEach(() => {
-    global.fetch = originalFetch;
+    globalThis.fetch = originalFetch;
   });
 
   it('shows a top alert when the connection is lost and hides it when restored', async () => {
@@ -128,7 +128,7 @@ describe('offline mode (integration)', () => {
         ]),
       );
 
-    global.fetch = fetchMock as unknown as typeof fetch;
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
 
     const { store } = createTestStore();
 
