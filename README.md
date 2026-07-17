@@ -89,10 +89,21 @@ mobile/src/
 ├── navigation/    # Nested drawers (left Settings, right Filters)
 ├── screens/       # MapScreen, SettingsScreen
 ├── components/    # Markers, filter drawer, offline banner, pin details
-├── features/map/  # selectVisiblePins (viewport + filters)
+├── features/map/  # filterPins, clustering, viewport bounds
 ├── hooks/         # network sync
 └── utils/         # API host, map bounds
 ```
+
+## Tests
+
+Unit + integration tests live in `mobile/__tests__/`:
+
+- viewport / clustering / badge helpers
+- settings persist (redux-persist round-trip)
+- left drawer → Settings, filter Apply → store
+- map header drawers, Settings pin style, pin bottom sheet
+
+GitHub Actions (`.github/workflows/ci.yml`) runs on push/PR: `npm ci` → typecheck → `npm test` → lint.
 
 ## Scripts
 

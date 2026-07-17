@@ -1,5 +1,5 @@
 {
-  "name": "AmpecoPins",
+  "name": "Ampeco",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -57,6 +57,7 @@
     "patch-package": "^8.0.1",
     "prettier": "2.8.8",
     "react-test-renderer": "19.2.3",
+    "test-renderer": "^1.2.0",
     "typescript": "^5.8.3"
   },
   "engines": {
