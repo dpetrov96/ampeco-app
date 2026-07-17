@@ -4,12 +4,6 @@ import { setupListeners } from '@reduxjs/toolkit/query';
 import NetInfo from '@react-native-community/netinfo';
 import { AppState } from 'react-native';
 import {
-  FLUSH,
-  PAUSE,
-  PERSIST,
-  PURGE,
-  REGISTER,
-  REHYDRATE,
   persistReducer,
   persistStore,
 } from 'redux-persist';
@@ -38,10 +32,9 @@ export const store = configureStore({
   reducer: persistedReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
-      serializableCheck: {
-        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
-        ignoredPaths: [`${api.reducerPath}.queries`],
-      },
+      // Large RTK Query cache (~20k pins) makes these deep walks too slow in dev.
+      immutableCheck: false,
+      serializableCheck: false,
     }).concat(api.middleware),
 });
 
