@@ -1,4 +1,4 @@
-package com.ampecopins
+package com.ampeco
 
 import android.app.Application
 import com.facebook.react.PackageList

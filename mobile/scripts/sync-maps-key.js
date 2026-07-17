@@ -1,7 +1,7 @@
 /**
  * Syncs Google Maps API key for native builds and generates JS config.
  *
- * - Writes ios/AmpecoPins/GoogleMapsKey.generated.swift (runtime key for GMSServices)
+ * - Writes ios/Ampeco/GoogleMapsKey.generated.swift (runtime key for GMSServices)
  * - Keeps Info.plist GMSApiKey as a git-safe placeholder (never the real secret)
  * - Writes src/config/maps.generated.ts for JS provider selection
  * - Android still reads .env directly from Gradle
@@ -15,11 +15,11 @@ const { execFileSync } = require('child_process');
 
 const root = path.join(__dirname, '..');
 const envPath = path.join(root, '.env');
-const plistPath = path.join(root, 'ios/AmpecoPins/Info.plist');
+const plistPath = path.join(root, 'ios/Ampeco/Info.plist');
 const generatedTsPath = path.join(root, 'src/config/maps.generated.ts');
 const generatedSwiftPath = path.join(
   root,
-  'ios/AmpecoPins/GoogleMapsKey.generated.swift',
+  'ios/Ampeco/GoogleMapsKey.generated.swift',
 );
 const PLACEHOLDER = 'YOUR_GOOGLE_MAPS_API_KEY';
 

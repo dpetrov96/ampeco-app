@@ -97,9 +97,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.ampecopins"
+    namespace "com.ampeco"
     defaultConfig {
-        applicationId "com.ampecopins"
+        applicationId "com.ampeco"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

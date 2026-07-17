@@ -1,4 +1,4 @@
-package com.ampecopins
+package com.ampeco
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

@@ -23,7 +23,7 @@ DerivedData
 **/.xcode.env.local
 
 # Google Maps key (generated from .env — never commit secrets)
-ios/AmpecoPins/GoogleMapsKey.generated.swift
+ios/Ampeco/GoogleMapsKey.generated.swift
 
 # Android/IntelliJ
 #

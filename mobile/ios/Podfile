@@ -14,7 +14,7 @@ if linkage != nil
   use_frameworks! :linkage => linkage.to_sym
 end
 
-target 'AmpecoPins' do
+target 'Ampeco' do
   config = use_native_modules!
 
   # Google Maps subspec — used when GOOGLE_MAPS_API_KEY is present.

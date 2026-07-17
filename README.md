@@ -43,7 +43,7 @@ npm run ios
 
 ### Physical iPhone
 
-1. Open `mobile/ios/AmpecoPins.xcworkspace` in Xcode
+1. Open `mobile/ios/Ampeco.xcworkspace` in Xcode
 2. Select your Team under Signing
 3. Plug in the phone and Run
 4. In `src/utils/apiHost.ts`, set `DEV_API_HOST_OVERRIDE` to your Mac LAN IP, e.g. `http://192.168.1.10:3000`
@@ -64,7 +64,7 @@ This matches the task expectation: Google when a key is available; otherwise App
 
 - `npm run ios` / `npm start` / `npm run android` run `sync-maps-key`, which generates:
   - `src/config/maps.generated.ts` — JS chooses Google vs Apple
-  - `ios/AmpecoPins/GoogleMapsKey.generated.swift` — native `GMSServices` init (gitignored)
+  - `ios/Ampeco/GoogleMapsKey.generated.swift` — native `GMSServices` init (gitignored)
 - `Info.plist` keeps a placeholder only — do not commit a real key there
 - Android: Gradle reads `.env` at build time via `manifestPlaceholders`
 
