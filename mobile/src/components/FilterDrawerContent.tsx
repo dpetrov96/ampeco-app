@@ -1,5 +1,9 @@
 import type { DrawerContentComponentProps } from '@react-navigation/drawer';
-import { DrawerContentScrollView } from '@react-navigation/drawer';
+import {
+  DrawerContentScrollView,
+  useDrawerStatus,
+} from '@react-navigation/drawer';
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -14,8 +18,7 @@ import { AMPECO_BLUE } from './AmpecoLoader';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import {
   beginApplyFilters,
-  toggleDraftStatus,
-  toggleDraftType,
+  setDraftFilters,
 } from '../store/slices/filtersSlice';
 import {
   CONNECTOR_STATUSES,
@@ -102,13 +105,51 @@ function ConnectorTypeTile({
 
 export function FilterDrawerContent(props: DrawerContentComponentProps) {
   const dispatch = useAppDispatch();
-  const draft = useAppSelector((state) => state.filters.draft);
+  const applied = useAppSelector((state) => state.filters.applied);
   const isApplying = useAppSelector((state) => state.filters.isApplying);
+  const drawerStatus = useDrawerStatus();
+
+  const [types, setTypes] = useState<ConnectorType[]>(() => [...applied.types]);
+  const [statuses, setStatuses] = useState<ConnectorStatus[]>(() => [
+    ...applied.statuses,
+  ]);
+
+  useEffect(() => {
+    if (drawerStatus === 'open') {
+      setTypes([...applied.types]);
+      setStatuses([...applied.statuses]);
+    }
+  }, [drawerStatus, applied]);
+
+  const toggleType = (type: ConnectorType) => {
+    setTypes((current) => {
+      if (current.includes(type)) {
+        if (current.length === 1) {
+          return current;
+        }
+        return current.filter((item) => item !== type);
+      }
+      return [...current, type];
+    });
+  };
+
+  const toggleStatus = (status: ConnectorStatus) => {
+    setStatuses((current) => {
+      if (current.includes(status)) {
+        if (current.length === 1) {
+          return current;
+        }
+        return current.filter((item) => item !== status);
+      }
+      return [...current, status];
+    });
+  };
 
   const onApply = () => {
     if (isApplying) {
       return;
     }
+    dispatch(setDraftFilters({ types, statuses }));
     dispatch(beginApplyFilters());
   };
 
@@ -128,8 +169,8 @@ export function FilterDrawerContent(props: DrawerContentComponentProps) {
               <ConnectorTypeTile
                 key={type}
                 type={type}
-                selected={draft.types.includes(type)}
-                onToggle={() => dispatch(toggleDraftType(type))}
+                selected={types.includes(type)}
+                onToggle={() => toggleType(type)}
                 disabled={isApplying}
               />
             ))}
@@ -144,8 +185,8 @@ export function FilterDrawerContent(props: DrawerContentComponentProps) {
             <StatusCheckboxRow
               key={status}
               label={status === 'available' ? 'Available' : 'Unavailable'}
-              checked={draft.statuses.includes(status)}
-              onToggle={() => dispatch(toggleDraftStatus(status))}
+              checked={statuses.includes(status)}
+              onToggle={() => toggleStatus(status)}
               isLast={index === CONNECTOR_STATUSES.length - 1}
               disabled={isApplying}
             />

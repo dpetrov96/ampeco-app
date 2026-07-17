@@ -24,7 +24,10 @@ const allFilters: FilterSelection = {
 };
 
 const initialState: FiltersState = {
-  draft: { ...allFilters, types: [...allFilters.types], statuses: [...allFilters.statuses] },
+  draft: {
+    types: [...allFilters.types],
+    statuses: [...allFilters.statuses],
+  },
   applied: {
     types: [...allFilters.types],
     statuses: [...allFilters.statuses],
@@ -36,29 +39,11 @@ const filtersSlice = createSlice({
   name: 'filters',
   initialState,
   reducers: {
-    toggleDraftType(state, action: PayloadAction<ConnectorType>) {
-      const type = action.payload;
-      if (state.draft.types.includes(type)) {
-        if (state.draft.types.length === 1) {
-          return;
-        }
-        state.draft.types = state.draft.types.filter((item) => item !== type);
-      } else {
-        state.draft.types.push(type);
-      }
-    },
-    toggleDraftStatus(state, action: PayloadAction<ConnectorStatus>) {
-      const status = action.payload;
-      if (state.draft.statuses.includes(status)) {
-        if (state.draft.statuses.length === 1) {
-          return;
-        }
-        state.draft.statuses = state.draft.statuses.filter(
-          (item) => item !== status,
-        );
-      } else {
-        state.draft.statuses.push(status);
-      }
+    setDraftFilters(state, action: PayloadAction<FilterSelection>) {
+      state.draft = {
+        types: [...action.payload.types],
+        statuses: [...action.payload.statuses],
+      };
     },
     beginApplyFilters(state) {
       state.isApplying = true;
@@ -72,22 +57,14 @@ const filtersSlice = createSlice({
     finishApplyFilters(state) {
       state.isApplying = false;
     },
-    resetDraftToApplied(state) {
-      state.draft = {
-        types: [...state.applied.types],
-        statuses: [...state.applied.statuses],
-      };
-    },
   },
 });
 
 export const {
-  toggleDraftType,
-  toggleDraftStatus,
+  setDraftFilters,
   beginApplyFilters,
   applyFilters,
   finishApplyFilters,
-  resetDraftToApplied,
 } = filtersSlice.actions;
 
 export default filtersSlice.reducer;
