@@ -57,16 +57,34 @@ function writeSwiftKey(apiKey) {
   );
 }
 
+function setPlistPlaceholder() {
+  const plistBuddy = '/usr/libexec/PlistBuddy';
+  // Linux CI / non-mac hosts have no PlistBuddy — JS + Swift outputs are enough.
+  if (
+    process.platform !== 'darwin' ||
+    !fs.existsSync(plistBuddy) ||
+    !fs.existsSync(plistPath)
+  ) {
+    return;
+  }
+
+  try {
+    setPlist(`Set :GMSApiKey ${PLACEHOLDER}`);
+  } catch {
+    try {
+      setPlist(`Add :GMSApiKey string ${PLACEHOLDER}`);
+    } catch {
+      // Ignore — placeholder already present or plist not writable in this env.
+    }
+  }
+}
+
 const clear = process.argv.includes('--clear');
 const keyFromEnv = readMapsKey();
 const hasKey = Boolean(keyFromEnv);
 
-// Never commit the real key via Info.plist — always placeholder there.
-try {
-  setPlist(`Set :GMSApiKey ${PLACEHOLDER}`);
-} catch {
-  setPlist(`Add :GMSApiKey string ${PLACEHOLDER}`);
-}
+// Never commit the real key via Info.plist — always placeholder there (macOS).
+setPlistPlaceholder();
 
 // Runtime key for the app binary (local / CI with .env).
 writeSwiftKey(keyFromEnv);
