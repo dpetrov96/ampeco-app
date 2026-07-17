@@ -5,6 +5,35 @@ Monorepo with a local Express pins API and a bare React Native (Community CLI) m
 ## 🎥 Demo
 https://github.com/user-attachments/assets/d44c528c-0efa-4365-97ca-436f70c3d361
 
+## Features
+
+### Requirements
+
+| Feature | Status | Notes |
+| --- | --- | --- |
+| Map + Settings screens | Done | Nested left/right drawers |
+| Default screen is the map | Done | Google Maps when API key is set |
+| Pins fetched from local server | Done | RTK Query → `GET /pins` |
+| Tappable pins → details popup | Done | Bottom sheet with title, lat, lon, connectors |
+| Connector types & status colors | Done | Available / unavailable use distinct text colors |
+| Render only pins in visible map bounds | Done | Viewport bbox filtering |
+| Settings: pin style preference | Done | Pin / dot styles |
+| Persist pin style across restarts | Done | `redux-persist` + AsyncStorage |
+| Left drawer → Settings | Done | Top-left button on the map |
+| Right drawer filters + Apply | Done | Connector type & status checkboxes |
+| Redux Toolkit + TypeScript | Done | Strongly typed store and API |
+| Pins in global store | Done | RTK Query cache |
+| Unit / integration tests | Done | Jest + Testing Library |
+| Offline mode (nice-to-have) | Done | Banner, cached pins, refetch on reconnect |
+
+### Bonus
+
+| Feature | Notes |
+| --- | --- |
+| Pin clustering | Supercluster for ~20k pins; keeps the map smooth |
+| My location button | Centers the map on the user |
+| GitHub Actions CI | Typecheck → tests → lint on push/PR |
+| Splash / branded loader | Shown while pins are loading |
 
 ## Structure
 
@@ -106,6 +135,7 @@ Unit + integration tests live in `mobile/__tests__/`:
 - settings persist (redux-persist round-trip)
 - left drawer → Settings, filter Apply → store
 - map header drawers, Settings pin style, pin bottom sheet
+- offline mode (banner, cached pins, refetch on reconnect)
 
 GitHub Actions (`.github/workflows/ci.yml`) runs on push/PR: `npm ci` → typecheck → `npm test` → lint.
 
