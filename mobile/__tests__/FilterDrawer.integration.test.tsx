@@ -39,10 +39,10 @@ function drawerProps(
       openDrawer: jest.fn(),
       closeDrawer: jest.fn(),
       toggleDrawer: jest.fn(),
-    } as DrawerContentComponentProps['navigation'],
+    } as unknown as DrawerContentComponentProps['navigation'],
     descriptors: {},
     ...overrides,
-  } as DrawerContentComponentProps;
+  } as unknown as DrawerContentComponentProps;
 }
 
 describe('FilterDrawerContent (integration)', () => {

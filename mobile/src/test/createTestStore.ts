@@ -78,5 +78,9 @@ export function waitForRehydrate(persistor: Persistor): Promise<void> {
 
 /** Wait for redux-persist to flush to AsyncStorage. */
 export async function flushPersistWrites(): Promise<void> {
-  await new Promise((resolve) => setTimeout(resolve, 50));
+  await new Promise<void>((resolve) => {
+    setTimeout(() => {
+      resolve();
+    }, 50);
+  });
 }
