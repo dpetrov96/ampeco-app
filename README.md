@@ -2,6 +2,10 @@
 
 Monorepo with a local Express pins API and a bare React Native (Community CLI) mobile app. No Expo.
 
+## 🎥 Demo
+https://github.com/user-attachments/assets/d44c528c-0efa-4365-97ca-436f70c3d361
+
+
 ## Structure
 
 ```
