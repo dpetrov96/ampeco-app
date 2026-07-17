@@ -1,4 +1,4 @@
-import { render, screen, userEvent } from '@testing-library/react-native';
+import { fireEvent, render, screen } from '@testing-library/react-native';
 
 import { PinBottomSheet } from '@/components/PinBottomSheet';
 import {
@@ -20,7 +20,6 @@ const pin: Pin = {
 
 describe('PinBottomSheet (integration)', () => {
   it('shows pin details and connector status colors', async () => {
-    const user = userEvent.setup();
     const onClose = jest.fn();
 
     await render(<PinBottomSheet pin={pin} onClose={onClose} />);
@@ -33,7 +32,7 @@ describe('PinBottomSheet (integration)', () => {
     expect(screen.getByText('Available')).toBeTruthy();
     expect(screen.getByText('Unavailable')).toBeTruthy();
 
-    await user.press(screen.getByLabelText('Close'));
+    fireEvent.press(screen.getByLabelText('Close'));
     expect(onClose).toHaveBeenCalled();
   });
 
