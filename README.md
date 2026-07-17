@@ -15,7 +15,7 @@ Monorepo with a local Express pins API and a bare React Native (Community CLI) m
 - Node.js >= 22.11
 - Xcode (iOS) / Android Studio (Android)
 - CocoaPods (`pod` / `bundle exec pod`)
-- Google Maps API key (for map tiles)
+- Google Maps API key (optional on iOS — see below)
 
 ## 1. Start the server
 
@@ -50,11 +50,23 @@ npm run ios
 
 ### Google Maps API key
 
-1. Copy `mobile/.env.example` to `mobile/.env`
-2. Set `GOOGLE_MAPS_API_KEY=...` (file is gitignored)
+**Important — iOS provider fallback (requirement kept):**
 
-- iOS: `npm run ios` runs `sync-maps-key` and writes the key into `Info.plist` locally. Do not commit that change.
-- Android: Gradle reads `.env` at build time via `manifestPlaceholders`.
+| `GOOGLE_MAPS_API_KEY` in `mobile/.env` | iOS | Android |
+| --- | --- | --- |
+| Present | Google Maps | Google Maps |
+| Missing / empty | **Apple Maps** | Google Maps (tiles need a key) |
+
+This matches the task expectation: Google when a key is available; otherwise Apple Maps on iOS. The app does not require a Google key to run on the iOS Simulator.
+
+1. Copy `mobile/.env.example` to `mobile/.env`
+2. Set `GOOGLE_MAPS_API_KEY=...` (file is gitignored), or leave it empty to use Apple Maps on iOS
+
+- `npm run ios` / `npm start` / `npm run android` run `sync-maps-key`, which generates:
+  - `src/config/maps.generated.ts` — JS chooses Google vs Apple
+  - `ios/AmpecoPins/GoogleMapsKey.generated.swift` — native `GMSServices` init (gitignored)
+- `Info.plist` keeps a placeholder only — do not commit a real key there
+- Android: Gradle reads `.env` at build time via `manifestPlaceholders`
 
 ## 3. Android
 
