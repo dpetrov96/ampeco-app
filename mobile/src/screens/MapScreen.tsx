@@ -112,7 +112,9 @@ export function MapScreen() {
       }
     };
 
-    void focusNearUser();
+    focusNearUser().catch(() => {
+      // Location permission / GPS failures fall back to INITIAL region.
+    });
 
     return () => {
       cancelled = true;
