@@ -23,7 +23,6 @@ class ClusterBadgeModule: NSObject {
     return uri
   }
 
-  /// Pin body + AC/DC label under the logo circle (matches PinGlyph layout).
   @objc(getPinUri:)
   func getPinUri(_ label: NSString) -> String {
     let key = label as String
@@ -158,7 +157,6 @@ class ClusterBadgeModule: NSObject {
         height: labelBoxHeight
       )
 
-      // Soft backdrop behind the caption
       UIColor(white: 0, alpha: 0.18).setFill()
       UIBezierPath(roundedRect: boxRect.insetBy(dx: -2, dy: -1.5), cornerRadius: 5).fill()
 

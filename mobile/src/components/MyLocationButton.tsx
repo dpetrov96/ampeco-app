@@ -18,7 +18,6 @@ const LOCATION_DELTA = 0.02;
 
 type Props = {
   onLocate: (region: MapRegion) => void;
-  /** Extra bottom offset when a bottom sheet is open. */
   bottomOffset?: number;
 };
 

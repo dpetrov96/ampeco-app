@@ -19,7 +19,6 @@ export function formatClusterCount(count: number): string {
   return String(count);
 }
 
-/** Runtime badge data URI via native ClusterBadgeModule (Core Graphics / Paint). */
 export function getClusterBadgeUri(count: number): string {
   const key = Math.max(2, Math.floor(count));
   const cached = badgeCache.get(key);
@@ -33,7 +32,6 @@ export function getClusterBadgeUri(count: number): string {
   return uri;
 }
 
-/** Pin teardrop + AC/DC label under the logo circle. */
 export function getPinIconUri(label: PinPowerLabel): string {
   const cached = pinCache.get(label);
   if (cached !== undefined) {

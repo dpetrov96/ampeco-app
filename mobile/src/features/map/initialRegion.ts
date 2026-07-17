@@ -220,7 +220,6 @@ export function findInitialMapRegion(
     anchorLng = fitted.longitude;
   }
 
-  // Widen to a regional frame (include nearby countries' pins when present).
   const regionalPins = pinsWithinKm(
     pins,
     anchorLat,

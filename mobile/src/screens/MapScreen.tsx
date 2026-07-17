@@ -40,7 +40,6 @@ import {
 
 const REGION_DEBOUNCE_MS = 180;
 
-/** Google when a key is present; otherwise Apple Maps on iOS. */
 const MAP_PROVIDER = HAS_GOOGLE_MAPS_KEY
   ? PROVIDER_GOOGLE
   : Platform.OS === 'ios'

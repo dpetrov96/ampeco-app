@@ -5,9 +5,7 @@
  * - Keeps Info.plist GMSApiKey as a git-safe placeholder (never the real secret)
  * - Writes src/config/maps.generated.ts for JS provider selection
  * - Android still reads .env directly from Gradle
- *
- * `--clear` is a no-op for the Swift key (local builds keep working). It only
- * ensures Info.plist stays on the placeholder.
+ * - `--clear` keeps Info.plist on the placeholder only
  */
 const fs = require('fs');
 const path = require('path');
@@ -83,10 +81,7 @@ const clear = process.argv.includes('--clear');
 const keyFromEnv = readMapsKey();
 const hasKey = Boolean(keyFromEnv);
 
-// Never commit the real key via Info.plist — always placeholder there (macOS).
 setPlistPlaceholder();
-
-// Runtime key for the app binary (local / CI with .env).
 writeSwiftKey(keyFromEnv);
 
 fs.mkdirSync(path.dirname(generatedTsPath), { recursive: true });

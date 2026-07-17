@@ -27,7 +27,6 @@ const rootReducer = combineReducers({
 export type TestRootState = ReturnType<typeof rootReducer>;
 export type TestStore = ReturnType<typeof createTestStore>['store'];
 
-/** In-memory store without persist (most UI integration tests). */
 export function createTestStore(preloadedState?: Partial<TestRootState>) {
   const store = configureStore({
     reducer: rootReducer,
@@ -39,7 +38,6 @@ export function createTestStore(preloadedState?: Partial<TestRootState>) {
   return { store };
 }
 
-/** Same persist whitelist as production (`settings` + API cache). */
 export function createPersistedTestStore() {
   const persistConfig = {
     key: 'root',
@@ -76,7 +74,6 @@ export function waitForRehydrate(persistor: Persistor): Promise<void> {
   });
 }
 
-/** Wait for redux-persist to flush to AsyncStorage. */
 export async function flushPersistWrites(): Promise<void> {
   await new Promise<void>((resolve) => {
     setTimeout(() => {

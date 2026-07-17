@@ -254,7 +254,6 @@ export function getClustersForRegion(
   let zoom = clusterQueryZoom(region);
   let items = mapClusterFeatures(index.getClusters(bbox, zoom), pinsById);
 
-  // Coarsen until native marker count is safe for maps performance.
   while (items.length > MAX_VISIBLE_MARKERS && zoom > 0) {
     zoom -= 1;
     items = mapClusterFeatures(index.getClusters(bbox, zoom), pinsById);
