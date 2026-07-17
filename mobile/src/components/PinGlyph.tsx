@@ -19,10 +19,6 @@ type Props = {
 
 const GREEN_RING = '#8fbc7a';
 
-/**
- * - pin: teardrop + AC/DC caption under the tip (matches map marker)
- * - dot: compact branded circle
- */
 export function PinGlyph({ style, powerLabel = 'AC' }: Props) {
   if (style === 'dot') {
     return (

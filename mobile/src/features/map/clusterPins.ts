@@ -39,10 +39,6 @@ export type MapClusterItem =
       clusterId: number;
     };
 
-/**
- * Supercluster radius (tile px, extent 512). ~70 balances regional clusters
- * when zoomed out vs not flooding the map with singles.
- */
 const CLUSTER_OPTIONS: Supercluster.Options<
   PinPointProperties,
   ClusterProperties
@@ -52,16 +48,10 @@ const CLUSTER_OPTIONS: Supercluster.Options<
   minPoints: 2,
 };
 
-/** Hard cap — more native markers than this freezes react-native-maps. */
 export const MAX_VISIBLE_MARKERS = 72;
 
-/** Assumed map width for post-cluster declutter (screen px). */
 const VIEWPORT_WIDTH_PX = 390;
 
-/**
- * Minimum gap between marker centres. Below this, absorb/merge so pins and
- * clusters do not stack (same idea as Mapbox/Google map declutter).
- */
 const MIN_MARKER_GAP_PX = 56;
 
 export function createPinClusterIndex(
@@ -103,16 +93,10 @@ function approxPixelDistance(
   return Math.hypot(dx, dy);
 }
 
-/**
- * Absorb lone pins into nearby clusters and merge overlapping clusters so
- * markers do not visually stack. Cluster counts stay accurate for the UI.
- */
 export function declutterClusterItems(
   items: MapClusterItem[],
   region: MapRegion,
 ): MapClusterItem[] {
-  // At very wide zooms, Supercluster already returns coarse clusters; screen-px
-  // merge would collapse them into a few mega-blobs again.
   if (region.longitudeDelta >= 25 || region.latitudeDelta >= 25) {
     return items;
   }
@@ -186,11 +170,6 @@ export function declutterClusterItems(
   return [...mergedClusters, ...remainingPins];
 }
 
-/**
- * Camera zoom for Supercluster. Stay close to the real zoom so we do not
- * spawn hundreds of markers; only a tiny bump when fully zoomed out so the
- * world is not a single mega-cluster.
- */
 export function clusterQueryZoom(region: MapRegion): number {
   const zoom = regionToZoom(region);
   if (zoom <= 1) {
@@ -288,13 +267,11 @@ export function getClusterExpansionRegion(
   let longitudeDelta = Math.max((maxLng - minLng) * pad, 0.004);
   let latitudeDelta = Math.max((maxLat - minLat) * pad, 0.004);
 
-  // Never zoom past the zoom where this cluster first splits (no +1 overshoot).
   const expansionZoom = index.getClusterExpansionZoom(clusterId);
   const expansionDelta = zoomToLongitudeDelta(expansionZoom);
   longitudeDelta = Math.max(longitudeDelta, expansionDelta);
   latitudeDelta = Math.max(latitudeDelta, expansionDelta);
 
-  // One tap ≈ at most +2 zoom levels (same feel as Mapbox / Google Maps).
   if (currentRegion) {
     const currentZoom = regionToZoom(currentRegion);
     const targetZoom = regionToZoom({

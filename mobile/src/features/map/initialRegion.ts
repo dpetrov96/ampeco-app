@@ -1,7 +1,6 @@
 import type { MapRegion } from '@/types/map';
 import type { Pin } from '@/types/pin';
 
-/** Coarse country boxes — enough to prefer “same country” without a geocoder. */
 const COUNTRY_BOXES: Array<{
   id: string;
   south: number;
@@ -23,7 +22,6 @@ const COUNTRY_BOXES: Array<{
   { id: 'US', south: 24.5, north: 49.4, west: -125.0, east: -66.9 },
 ];
 
-/** Fallback when location / pins are unavailable (Balkans / SE Europe overview). */
 export const FALLBACK_INITIAL_REGION: MapRegion = {
   latitude: 42.5,
   longitude: 24.5,
@@ -31,7 +29,6 @@ export const FALLBACK_INITIAL_REGION: MapRegion = {
   longitudeDelta: 12,
 };
 
-/** Prefer pins near the user, but keep a wide enough zoom for neighbouring countries. */
 const LOCAL_RADIUS_KM = 120;
 const NEIGHBORHOOD_KM = 250;
 const WIDE_NEIGHBORHOOD_KM = 450;
@@ -156,10 +153,6 @@ function pinsWithinKm(
   );
 }
 
-/**
- * Initial camera: nearest area that has pins (prefer same country), with a
- * regional zoom so neighbouring countries stay in view — not city-tight.
- */
 export function findInitialMapRegion(
   userLatitude: number,
   userLongitude: number,

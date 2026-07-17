@@ -123,7 +123,6 @@ describe('clusterPins', () => {
 
     expect(next.latitudeDelta).toBeLessThan(region.latitudeDelta);
     expect(next.longitudeDelta).toBeLessThan(region.longitudeDelta);
-    // Should not jump more than ~2 zoom levels from the current view.
     expect(regionToZoom(next)).toBeLessThanOrEqual(regionToZoom(region) + 2);
   });
 });

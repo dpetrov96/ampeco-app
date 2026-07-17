@@ -32,7 +32,6 @@ export const store = configureStore({
   reducer: persistedReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
-      // Large RTK Query cache (~20k pins) makes these deep walks too slow in dev.
       immutableCheck: false,
       serializableCheck: false,
     }).concat(api.middleware),

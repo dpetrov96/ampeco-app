@@ -34,7 +34,6 @@ describe('initialRegion', () => {
       makePin({ _id: 'nyc', latitude: 40.71, longitude: -74.0 }),
     ];
 
-    // Varna — no local pins in this fixture
     const region = findInitialMapRegion(43.21, 27.91, pins);
 
     expect(haversineKm(region.latitude, region.longitude, 42.7, 23.32)).toBeLessThan(

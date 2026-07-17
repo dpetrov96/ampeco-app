@@ -105,14 +105,11 @@ export function FilterDrawerContent(props: DrawerContentComponentProps) {
   const appliedRef = useRef(applied);
   appliedRef.current = applied;
 
-  // Local draft only — Redux stores applied (+ pending during apply).
   const [types, setTypes] = useState<ConnectorType[]>(() => [...applied.types]);
   const [statuses, setStatuses] = useState<ConnectorStatus[]>(() => [
     ...applied.statuses,
   ]);
 
-  // Sync draft when the drawer opens — not when applied changes mid-close
-  // (that re-render fight was reopening / freezing the drawer).
   useEffect(() => {
     if (drawerStatus === 'open') {
       setTypes([...appliedRef.current.types]);
@@ -120,8 +117,6 @@ export function FilterDrawerContent(props: DrawerContentComponentProps) {
     }
   }, [drawerStatus]);
 
-  // Commit only after the drawer is fully closed. Applying ~20k pins mid-close
-  // freezes the animation and can snap the filters drawer back open on map taps.
   useEffect(() => {
     if (!isApplying || drawerStatus !== 'closed') {
       return;

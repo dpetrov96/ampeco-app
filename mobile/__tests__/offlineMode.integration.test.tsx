@@ -116,9 +116,7 @@ describe('offline mode (integration)', () => {
   it('refetches pins when the connection is restored', async () => {
     const fetchMock = jest
       .fn()
-      // initial load
       .mockResolvedValueOnce(mockPinsResponse(cachedPins))
-      // reconnect refetch
       .mockResolvedValueOnce(
         mockPinsResponse([
           {
@@ -167,7 +165,6 @@ describe('offline mode (integration)', () => {
     expect(
       screen.getByText('Connection lost. Information may be outdated.'),
     ).toBeTruthy();
-    // Stale cache remains visible while offline
     expect(screen.getByTestId('pin-title').props.children).toBe(
       'Cached Station',
     );

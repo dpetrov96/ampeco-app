@@ -30,8 +30,6 @@ function withTimeout<T>(
 
 export async function ensureLocationPermission(): Promise<boolean> {
   if (Platform.OS === 'ios') {
-    // requestAuthorization callbacks often never fire on iOS when status is
-    // already determined. getCurrentPosition prompts / fails itself.
     return true;
   }
 
