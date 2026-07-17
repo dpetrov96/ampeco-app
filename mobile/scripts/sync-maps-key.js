@@ -5,7 +5,6 @@
  * - Keeps Info.plist GMSApiKey as a git-safe placeholder (never the real secret)
  * - Writes src/config/maps.generated.ts for JS provider selection
  * - Android still reads .env directly from Gradle
- * - `--clear` keeps Info.plist on the placeholder only
  */
 const fs = require('fs');
 const path = require('path');
@@ -77,7 +76,6 @@ function setPlistPlaceholder() {
   }
 }
 
-const clear = process.argv.includes('--clear');
 const keyFromEnv = readMapsKey();
 const hasKey = Boolean(keyFromEnv);
 
@@ -91,13 +89,7 @@ fs.writeFileSync(
     `export const HAS_GOOGLE_MAPS_KEY = ${hasKey ? 'true' : 'false'} as const;\n`,
 );
 
-if (clear) {
-  console.log(
-    hasKey
-      ? 'Info.plist kept placeholder; GoogleMapsKey.generated.swift has key from .env; HAS_GOOGLE_MAPS_KEY=true.'
-      : 'Info.plist placeholder; no .env key — HAS_GOOGLE_MAPS_KEY=false.',
-  );
-} else if (!hasKey) {
+if (!hasKey) {
   console.warn(
     'GOOGLE_MAPS_API_KEY missing — iOS will use Apple Maps; Android Google tiles may be blank.',
   );

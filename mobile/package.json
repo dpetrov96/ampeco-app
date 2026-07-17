@@ -6,7 +6,6 @@
     "sync-maps-key": "node scripts/sync-maps-key.js",
     "android": "npm run sync-maps-key && react-native run-android",
     "ios": "npm run sync-maps-key && react-native run-ios",
-    "ios:clear-plist": "npm run sync-maps-key -- --clear",
     "lint": "eslint .",
     "start": "npm run sync-maps-key && react-native start",
     "test": "jest",
