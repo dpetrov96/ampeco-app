@@ -1,14 +1,14 @@
+import {
+  createPinClusterIndex,
+  getClustersForRegion,
+} from '@/features/map/clusterPins';
 import { filterPins } from '@/features/map/filterPins';
-import type { FilterSelection } from '@/store/slices/filtersSlice';
 import type { MapRegion } from '@/types/map';
 import {
-  CONNECTOR_STATUSES,
-  CONNECTOR_TYPES,
   ConnectorStatus,
   ConnectorType,
   type Pin,
 } from '@/types/pin';
-import { isCoordinateInBounds, regionToBounds } from '@/utils/mapBounds';
 
 const region: MapRegion = {
   latitude: 42.7,
@@ -27,24 +27,8 @@ const makePin = (
   ...overrides,
 });
 
-/** Viewport filtering used by the map (clustering queries the same bbox). */
-function visibleFilteredPins(
-  pins: Pin[],
-  mapRegion: MapRegion | null,
-  filters: FilterSelection,
-): Pin[] {
-  if (!mapRegion) {
-    return [];
-  }
-
-  const bounds = regionToBounds(mapRegion);
-  return filterPins(pins, filters).filter((pin) =>
-    isCoordinateInBounds(pin.latitude, pin.longitude, bounds),
-  );
-}
-
-describe('viewport + filter composition', () => {
-  it('returns only pins inside the region that match filters', () => {
+describe('filter + cluster composition', () => {
+  it('clusters only filtered pins that fall in the current region', () => {
     const pins: Pin[] = [
       makePin({ _id: 'inside', latitude: 42.7, longitude: 23.3 }),
       makePin({ _id: 'outside', latitude: 50, longitude: 10 }),
@@ -58,21 +42,18 @@ describe('viewport + filter composition', () => {
       }),
     ];
 
-    const visible = visibleFilteredPins(pins, region, {
+    const filtered = filterPins(pins, {
       types: [ConnectorType.Type2],
       statuses: [ConnectorStatus.Available],
     });
+    const pinsById = new Map(filtered.map((pin) => [pin._id, pin]));
+    const items = getClustersForRegion(
+      createPinClusterIndex(filtered),
+      pinsById,
+      region,
+    );
 
-    expect(visible.map((pin) => pin._id)).toEqual(['inside']);
-  });
-
-  it('returns empty array when region is null', () => {
-    expect(
-      visibleFilteredPins(
-        [makePin({ _id: 'a', latitude: 0, longitude: 0 })],
-        null,
-        { types: [...CONNECTOR_TYPES], statuses: [...CONNECTOR_STATUSES] },
-      ),
-    ).toEqual([]);
+    expect(items).toHaveLength(1);
+    expect(items[0]).toMatchObject({ kind: 'pin', id: 'inside' });
   });
 });

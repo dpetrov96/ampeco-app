@@ -8,11 +8,5 @@ module.exports = {
         jest: true,
       },
     },
-    {
-      files: ['src/features/map/clusterBadgeFallback.ts'],
-      rules: {
-        'no-bitwise': 'off',
-      },
-    },
   ],
 };

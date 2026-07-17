@@ -10,11 +10,11 @@ describe('clusterBadge', () => {
     expect(formatClusterCount(1500)).toBe('1.5k');
   });
 
-  it('returns a cached png data uri with the exact count key', () => {
+  it('returns a cached uri from the native module', () => {
     const a = getClusterBadgeUri(17);
     const b = getClusterBadgeUri(17);
     expect(a).toBe(b);
-    expect(a.startsWith('data:image/png;base64,')).toBe(true);
+    expect(a).toBe('data:image/png;base64,badge-17');
     expect(a).not.toBe(getClusterBadgeUri(18));
   });
 });

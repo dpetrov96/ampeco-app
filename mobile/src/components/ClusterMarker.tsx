@@ -13,10 +13,18 @@ type Props = {
   onPress: () => void;
 };
 
-/**
- * Exact count via runtime-rasterized badge → Marker `image`.
- * Works on Apple Maps and Google Maps (avoid View/Text children on Fabric Google).
- */
+const CLUSTER_FALLBACK = require('@/assets/pins/pin-dot-marker.png') as number;
+
+type MarkerIcon = number | { uri: string };
+
+function clusterIcon(count: number): MarkerIcon {
+  const uri = getClusterBadgeUri(count);
+  if (uri) {
+    return { uri };
+  }
+  return CLUSTER_FALLBACK;
+}
+
 export function ClusterMarker({
   id,
   latitude,
@@ -28,7 +36,7 @@ export function ClusterMarker({
     <Marker
       identifier={id}
       coordinate={{ latitude, longitude }}
-      image={{ uri: getClusterBadgeUri(count) }}
+      image={clusterIcon(count)}
       accessibilityLabel={`${formatClusterCount(count)} chargers`}
       onPress={(event) => {
         event.stopPropagation();

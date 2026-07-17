@@ -18,4 +18,4 @@ export const api = createApi({
   }),
 });
 
-export const { useGetPinsQuery, useLazyGetPinsQuery } = api;
+export const { useGetPinsQuery } = api;

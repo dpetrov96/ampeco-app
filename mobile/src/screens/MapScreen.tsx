@@ -40,13 +40,7 @@ import {
 
 const REGION_DEBOUNCE_MS = 180;
 
-/**
- * With Google key → Google Maps on both platforms.
- * Without key → Apple Maps on iOS (Android still requests Google; tiles need a key).
- *
- * Markers use the cross-platform `image` prop (same custom pin/cluster bitmaps
- * on Apple and Google). Nested View children stay unreliable on Google Fabric.
- */
+/** Google when a key is present; otherwise Apple Maps on iOS. */
 const MAP_PROVIDER = HAS_GOOGLE_MAPS_KEY
   ? PROVIDER_GOOGLE
   : Platform.OS === 'ios'
@@ -72,7 +66,6 @@ export function MapScreen() {
     [pins, appliedFilters],
   );
 
-  // Once pins are loaded, center on nearest area with pins (prefer same country).
   useEffect(() => {
     if (didApplyInitialFocus.current || filteredPins.length === 0) {
       return;
@@ -112,9 +105,7 @@ export function MapScreen() {
       }
     };
 
-    focusNearUser().catch(() => {
-      // Location permission / GPS failures fall back to INITIAL region.
-    });
+    focusNearUser();
 
     return () => {
       cancelled = true;
@@ -176,8 +167,6 @@ export function MapScreen() {
   };
 
   const onPinPress = (pin: Pin) => {
-    // Pan only — keep current zoom so neighbouring pins stay in the viewport.
-    // Nudge center south so the pin sits above the bottom sheet.
     const next: MapRegion = {
       latitude: pin.latitude - region.latitudeDelta * 0.2,
       longitude: pin.longitude,

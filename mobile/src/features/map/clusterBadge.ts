@@ -1,7 +1,6 @@
 import { NativeModules } from 'react-native';
 
 import type { PinPowerLabel } from '@/components/PinGlyph';
-import { renderClusterBadgeDataUriFallback } from '@/features/map/clusterBadgeFallback';
 
 type ClusterBadgeNative = {
   getBadgeUri: (count: number) => string;
@@ -20,30 +19,16 @@ export function formatClusterCount(count: number): string {
   return String(count);
 }
 
-/**
- * Runtime badge → data URI for GMSMarker.icon.
- * iOS/Android: Core Text / Paint via ClusterBadgeModule.
- * Fallback: JS bitmap (tests).
- */
+/** Runtime badge data URI via native ClusterBadgeModule (Core Graphics / Paint). */
 export function getClusterBadgeUri(count: number): string {
   const key = Math.max(2, Math.floor(count));
   const cached = badgeCache.get(key);
-  if (cached) {
+  if (cached !== undefined) {
     return cached;
   }
 
-  let uri = '';
-  if (typeof native?.getBadgeUri === 'function') {
-    try {
-      uri = native.getBadgeUri(key);
-    } catch {
-      uri = '';
-    }
-  }
-  if (!uri) {
-    uri = renderClusterBadgeDataUriFallback(key);
-  }
-
+  const uri =
+    typeof native?.getBadgeUri === 'function' ? native.getBadgeUri(key) : '';
   badgeCache.set(key, uri);
   return uri;
 }
@@ -51,19 +36,12 @@ export function getClusterBadgeUri(count: number): string {
 /** Pin teardrop + AC/DC label under the logo circle. */
 export function getPinIconUri(label: PinPowerLabel): string {
   const cached = pinCache.get(label);
-  if (cached) {
+  if (cached !== undefined) {
     return cached;
   }
 
-  let uri = '';
-  if (typeof native?.getPinUri === 'function') {
-    try {
-      uri = native.getPinUri(label);
-    } catch {
-      uri = '';
-    }
-  }
-
+  const uri =
+    typeof native?.getPinUri === 'function' ? native.getPinUri(label) : '';
   pinCache.set(label, uri);
   return uri;
 }

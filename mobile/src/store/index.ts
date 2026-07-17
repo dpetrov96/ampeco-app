@@ -16,7 +16,7 @@ import {
 
 import { api } from '@/api';
 import filtersReducer from '@/store/slices/filtersSlice';
-import networkReducer from '@/store/slices/networkSlice';
+import networkReducer, { setIsConnected } from '@/store/slices/networkSlice';
 import settingsReducer from '@/store/slices/settingsSlice';
 
 const rootReducer = combineReducers({
@@ -60,6 +60,7 @@ setupListeners(store.dispatch, (dispatch, actions) => {
     const online = Boolean(
       state.isConnected && state.isInternetReachable !== false,
     );
+    dispatch(setIsConnected(online));
     if (online) {
       dispatch(actions.onOnline());
     } else {

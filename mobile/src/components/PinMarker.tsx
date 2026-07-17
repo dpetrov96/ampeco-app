@@ -21,7 +21,6 @@ const AC_TYPES: ConnectorType[] = [
 const DC_TYPES: ConnectorType[] = [ConnectorType.Ccs2];
 
 const DOT_IMAGE = require('@/assets/pins/pin-dot-marker.png') as number;
-/** Fallback if native getPinUri is unavailable (e.g. Jest). */
 const PIN_FALLBACK = require('@/assets/pins/pin-marker.png') as number;
 
 type MarkerIcon = number | { uri: string };
@@ -59,10 +58,6 @@ function pinIconSource(style: PinStyle, label: PinPowerLabel): MarkerIcon {
   return PIN_FALLBACK;
 }
 
-/**
- * Marker `image` — same custom pins on Apple Maps and Google Maps.
- * Pin style composites AC/DC via native Core Text.
- */
 export function PinMarker({ pin, pinStyle, onPress }: Props) {
   const label = useMemo(() => powerLabel(pin), [pin]);
   const icon = useMemo(

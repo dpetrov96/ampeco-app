@@ -9,7 +9,6 @@ import { PersistGate } from 'redux-persist/integration/react';
 
 import { useGetPinsQuery } from '@/api';
 import { AmpecoLoader } from '@/components/AmpecoLoader';
-import { useNetworkSync } from '@/hooks/useNetworkSync';
 import { RootNavigator } from '@/navigation/RootNavigator';
 import { persistor, store } from '@/store';
 import { AMPECO_BLUE } from '@/theme/colors';
@@ -17,7 +16,6 @@ import { AMPECO_BLUE } from '@/theme/colors';
 const MIN_SPLASH_MS = 1400;
 
 function AppBootstrap() {
-  useNetworkSync();
   const { isLoading, isUninitialized, isSuccess, isError } = useGetPinsQuery();
   const [minTimePassed, setMinTimePassed] = useState(false);
 

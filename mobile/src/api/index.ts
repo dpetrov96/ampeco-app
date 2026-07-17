@@ -1,5 +1,1 @@
-export {
-  api,
-  useGetPinsQuery,
-  useLazyGetPinsQuery,
-} from '@/api/api';
+export { api, useGetPinsQuery } from '@/api/api';

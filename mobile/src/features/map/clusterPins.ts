@@ -319,30 +319,3 @@ export function getClusterExpansionRegion(
     longitudeDelta,
   };
 }
-
-/** Focus region when opening a single pin (street-ish, not city-wide). */
-export function getPinFocusRegion(
-  pin: Pin,
-  currentRegion: MapRegion,
-): MapRegion {
-  const focusDelta = 0.012;
-  const alreadyClose =
-    currentRegion.latitudeDelta <= focusDelta * 1.4 &&
-    currentRegion.longitudeDelta <= focusDelta * 1.4;
-
-  if (alreadyClose) {
-    return {
-      latitude: pin.latitude,
-      longitude: pin.longitude,
-      latitudeDelta: Math.min(currentRegion.latitudeDelta, focusDelta),
-      longitudeDelta: Math.min(currentRegion.longitudeDelta, focusDelta),
-    };
-  }
-
-  return {
-    latitude: pin.latitude,
-    longitude: pin.longitude,
-    latitudeDelta: focusDelta,
-    longitudeDelta: focusDelta,
-  };
-}

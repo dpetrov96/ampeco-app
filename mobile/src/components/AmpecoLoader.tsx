@@ -9,21 +9,11 @@ import {
 
 import { AMPECO_BLUE } from '@/theme/colors';
 
-type Props = {
-  visible?: boolean;
-};
-
-export function AmpecoLoader({ visible = true }: Props) {
+export function AmpecoLoader() {
   const scale = useRef(new Animated.Value(1)).current;
   const opacity = useRef(new Animated.Value(0.55)).current;
 
   useEffect(() => {
-    if (!visible) {
-      scale.stopAnimation();
-      opacity.stopAnimation();
-      return;
-    }
-
     const pulse = Animated.loop(
       Animated.parallel([
         Animated.sequence([
@@ -59,11 +49,7 @@ export function AmpecoLoader({ visible = true }: Props) {
 
     pulse.start();
     return () => pulse.stop();
-  }, [visible, scale, opacity]);
-
-  if (!visible) {
-    return null;
-  }
+  }, [scale, opacity]);
 
   return (
     <View style={styles.overlay}>

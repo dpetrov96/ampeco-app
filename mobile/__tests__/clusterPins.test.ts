@@ -3,7 +3,6 @@ import {
   declutterClusterItems,
   getClusterExpansionRegion,
   getClustersForRegion,
-  getPinFocusRegion,
   MAX_VISIBLE_MARKERS,
   type MapClusterItem,
 } from '@/features/map/clusterPins';
@@ -126,19 +125,6 @@ describe('clusterPins', () => {
     expect(next.longitudeDelta).toBeLessThan(region.longitudeDelta);
     // Should not jump more than ~2 zoom levels from the current view.
     expect(regionToZoom(next)).toBeLessThanOrEqual(regionToZoom(region) + 2);
-  });
-
-  it('focuses a pin without overshooting when already close', () => {
-    const pin = makePin({ _id: 'p', latitude: 42.7, longitude: 23.3 });
-    const close: MapRegion = {
-      latitude: 42.7,
-      longitude: 23.3,
-      latitudeDelta: 0.01,
-      longitudeDelta: 0.01,
-    };
-    const focused = getPinFocusRegion(pin, close);
-    expect(focused.latitude).toBe(pin.latitude);
-    expect(focused.longitudeDelta).toBeLessThanOrEqual(0.012);
   });
 });
 

@@ -11,14 +11,3 @@ export function regionToBounds(region: MapRegion): MapBounds {
     west: region.longitude - halfLng,
   };
 }
-
-export function isCoordinateInBounds(
-  latitude: number,
-  longitude: number,
-  bounds: MapBounds,
-): boolean {
-  const inLat = latitude <= bounds.north && latitude >= bounds.south;
-  const inLng = longitude <= bounds.east && longitude >= bounds.west;
-
-  return inLat && inLng;
-}

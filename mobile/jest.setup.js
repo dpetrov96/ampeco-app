@@ -1,5 +1,12 @@
 /* Jest setup for unit + integration tests. */
 
+const { NativeModules } = require('react-native');
+
+NativeModules.ClusterBadgeModule = {
+  getBadgeUri: (count) => `data:image/png;base64,badge-${count}`,
+  getPinUri: (label) => `data:image/png;base64,pin-${label}`,
+};
+
 const mockAsyncStorageStore = new Map();
 
 jest.mock('@react-native-async-storage/async-storage', () => ({

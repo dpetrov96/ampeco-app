@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 
-const DEV_API_HOST_OVERRIDE: string | null = 'http://172.20.10.13:3000';
+/** Set to a LAN URL when testing on a physical device; leave null for simulator/emulator. */
+const DEV_API_HOST_OVERRIDE: string | null = null;
 
 export function getApiBaseUrl(): string {
   if (DEV_API_HOST_OVERRIDE) {
