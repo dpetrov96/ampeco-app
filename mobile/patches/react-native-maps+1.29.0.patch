@@ -1,0 +1,469 @@
+diff --git a/node_modules/react-native-maps/ios/AirGoogleMaps/AIRGoogleMapMarker.m b/node_modules/react-native-maps/ios/AirGoogleMaps/AIRGoogleMapMarker.m
+index d729954..eafb691 100644
+--- a/node_modules/react-native-maps/ios/AirGoogleMaps/AIRGoogleMapMarker.m
++++ b/node_modules/react-native-maps/ios/AirGoogleMaps/AIRGoogleMapMarker.m
+@@ -9,9 +9,6 @@
+ 
+ #import "AIRGoogleMapMarker.h"
+ #import <GoogleMaps/GoogleMaps.h>
+-#import <React/RCTBridge.h>
+-#import <React/RCTBridge+Private.h>
+-#import <React/RCTImageLoaderProtocol.h>
+ #import <React/RCTUtils.h>
+ #import "AIRGMSMarker.h"
+ #import "AIRGoogleMapCallout.h"
+@@ -25,16 +22,112 @@ CGRect unionRect(CGRect a, CGRect b) {
+                       MAX(a.size.height, b.size.height));
+ }
+ 
++/**
++ * Bridgeless-safe image load + cache.
++ * Empty UIImage placeholders make GMSMarker fall back to the default red pin,
++ * so callers must keep map=nil until a real icon is ready.
++ */
++static NSCache<NSString *, UIImage *> *AIRGoogleMapIconCache(void) {
++    static NSCache<NSString *, UIImage *> *cache;
++    static dispatch_once_t onceToken;
++    dispatch_once(&onceToken, ^{
++        cache = [[NSCache alloc] init];
++        cache.countLimit = 256;
++    });
++    return cache;
++}
++
++static UIImage *AIRGoogleMapImageFromURISync(NSString *uri) {
++    if (uri.length == 0) {
++        return nil;
++    }
++    UIImage *cached = [AIRGoogleMapIconCache() objectForKey:uri];
++    if (cached) {
++        return cached;
++    }
++
++    // Runtime-rasterized badges (JS data URI) — sync decode, no network.
++    if ([uri hasPrefix:@"data:"]) {
++        NSRange comma = [uri rangeOfString:@","];
++        if (comma.location == NSNotFound) {
++            return nil;
++        }
++        NSString *b64 = [uri substringFromIndex:comma.location + 1];
++        NSData *data = [[NSData alloc] initWithBase64EncodedString:b64
++                                                           options:NSDataBase64DecodingIgnoreUnknownCharacters];
++        UIImage *image = data ? [UIImage imageWithData:data scale:RCTScreenScale()] : nil;
++        if (image) {
++            [AIRGoogleMapIconCache() setObject:image forKey:uri];
++        }
++        return image;
++    }
++
++    NSURL *url = [NSURL URLWithString:uri];
++    if (!url.isFileURL) {
++        return nil;
++    }
++    NSData *data = [NSData dataWithContentsOfFile:url.path];
++    UIImage *image = data ? [UIImage imageWithData:data scale:RCTScreenScale()] : nil;
++    if (image) {
++        [AIRGoogleMapIconCache() setObject:image forKey:uri];
++    }
++    return image;
++}
++
++static void (^AIRGoogleMapLoadImage(NSString *uri, void (^completion)(UIImage *image, NSError *error)))(void) {
++    if (uri.length == 0) {
++        completion(nil, nil);
++        return ^{};
++    }
++
++    UIImage *ready = AIRGoogleMapImageFromURISync(uri);
++    if (ready) {
++        // Synchronous — avoids one-frame default Google pin flash.
++        completion(ready, nil);
++        return ^{};
++    }
++
++    NSURL *url = [NSURL URLWithString:uri];
++    if (url == nil) {
++        NSError *error = [NSError errorWithDomain:@"AIRGoogleMapMarker"
++                                             code:1
++                                         userInfo:@{NSLocalizedDescriptionKey: @"Invalid image URI"}];
++        completion(nil, error);
++        return ^{};
++    }
++
++    NSURLSessionDataTask *task =
++        [[NSURLSession sharedSession] dataTaskWithURL:url
++                                    completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
++            UIImage *image = nil;
++            if (data != nil && error == nil) {
++                image = [UIImage imageWithData:data scale:RCTScreenScale()];
++                if (image) {
++                    [AIRGoogleMapIconCache() setObject:image forKey:uri];
++                }
++            }
++            dispatch_async(dispatch_get_main_queue(), ^{
++                completion(image, error);
++            });
++        }];
++    [task resume];
++    return ^{
++        [task cancel];
++    };
++}
++
+ @interface AIRGoogleMapMarker ()
+ @end
+ 
+ @implementation AIRGoogleMapMarker {
+-    RCTImageLoaderCancellationBlock _reloadImageCancellationBlock;
++    void (^_reloadImageCancellationBlock)(void);
+     RCTBubblingEventBlock _onPress;
+     RCTDirectEventBlock _onSelect;
+     RCTDirectEventBlock _onDeselect;
+     __weak UIImageView *_iconImageView;
+     UIView *_iconView;
++    UIImage *_loadedIcon;
++    __weak AIRGoogleMap *_mapForIcon;
+     UIColor *_pinColor;
+     CLLocationCoordinate2D _coordinates;
+     CLLocationDegrees _rotation;
+@@ -97,6 +190,7 @@ - (void) didInsertInMap:(AIRGoogleMap *) map
+     _realMarker.fakeMarker = self;
+     _realMarker.tracksViewChanges = _tracksViewChanges;
+     _realMarker.tracksInfoWindowChanges = _tracksInfoWindowChanges;
++    _mapForIcon = map;
+ 
+     [_realMarker setPosition:_coordinates];
+     if (_iconView){
+@@ -130,6 +224,14 @@ - (void) didInsertInMap:(AIRGoogleMap *) map
+     if (_pinColor){
+         _realMarker.icon = [GMSMarker markerImageWithColor:_pinColor];
+     }
++
++    // Resolve custom icon before attaching — never show the default Google pin.
++    if (_iconSrc.length > 0 && !_loadedIcon) {
++        _loadedIcon = AIRGoogleMapImageFromURISync(_iconSrc);
++    }
++    if (_loadedIcon) {
++        _realMarker.icon = _loadedIcon;
++    }
+     if (_opacity != 1.0){
+         [_realMarker setOpacity:_opacity];
+     }
+@@ -145,9 +247,30 @@ - (void) didInsertInMap:(AIRGoogleMap *) map
+     if (_zIndex){
+         [_realMarker setZIndex:_zIndex];
+     }
++
++    // If a custom icon is expected but not ready yet, stay off the map until
++    // setIconSrc finishes loading (empty UIImage → default red pin).
++    if (_iconSrc.length > 0 && !_loadedIcon) {
++        return;
++    }
+     [_realMarker setMap:map];
+ }
+ 
++- (void)air_applyLoadedIcon:(UIImage *)image
++{
++    if (!image) {
++        return;
++    }
++    _loadedIcon = image;
++    if (!_realMarker) {
++        return;
++    }
++    _realMarker.icon = image;
++    if (_mapForIcon && _realMarker.map == nil) {
++        [_realMarker setMap:_mapForIcon];
++    }
++}
++
+ - (void)iconViewInsertSubview:(UIView*)subview atIndex:(NSInteger)atIndex {
+     if (!_iconView){
+         _iconView = [[UIView alloc] init];
+@@ -366,55 +489,41 @@ - (void)setImageSrc:(NSString *)imageSrc
+     }
+     __weak AIRGoogleMapMarker* weakSelf = self;
+ 
+-    _reloadImageCancellationBlock = [[[RCTBridge currentBridge] moduleForName:@"ImageLoader"] loadImageWithURLRequest:[RCTConvert NSURLRequest:_imageSrc]
+-                                                                                               size:self.bounds.size
+-                                                                                              scale:RCTScreenScale()
+-                                                                                            clipped:YES
+-                                                                                         resizeMode:RCTResizeModeCenter
+-                                                                                      progressBlock:nil
+-                                                                                   partialLoadBlock:nil
+-                                                                                    completionBlock:^(NSError *error, UIImage *image) {
++    _reloadImageCancellationBlock = AIRGoogleMapLoadImage(_imageSrc, ^(UIImage *image, NSError *error) {
+         if (error) {
+-            // TODO(lmr): do something with the error?
+-            NSLog(@"%@", error);
++            NSLog(@"AIRGoogleMapMarker image load failed: %@", error);
++        }
++        if (!image) {
++            return;
+         }
+ 
+-        dispatch_async(dispatch_get_main_queue(), ^{
+-            __strong AIRGoogleMapMarker* strongSelf  = weakSelf;
+-
+-            // TODO(gil): This way allows different image sizes
+-            if (strongSelf->_iconImageView) [strongSelf->_iconImageView removeFromSuperview];
+-
+-            // ... but this way is more efficient?
+-            //                                                                   if (_iconImageView) {
+-            //                                                                     [_iconImageView setImage:image];
+-            //                                                                     return;
+-            //                                                                   }
++        __strong AIRGoogleMapMarker* strongSelf = weakSelf;
++        if (!strongSelf) {
++            return;
++        }
+ 
+-            UIImageView *imageView = [[UIImageView alloc] initWithImage:image];
++        if (strongSelf->_iconImageView) {
++            [strongSelf->_iconImageView removeFromSuperview];
++        }
+ 
+-            // TODO: w,h or pixel density could be a prop.
+-            float density = 1;
+-            float w = image.size.width/density;
+-            float h = image.size.height/density;
+-            CGRect bounds = CGRectMake(0, 0, w, h);
++        UIImageView *imageView = [[UIImageView alloc] initWithImage:image];
++        float w = image.size.width;
++        float h = image.size.height;
++        CGRect bounds = CGRectMake(0, 0, w, h);
+ 
+-            imageView.contentMode = UIViewContentModeScaleAspectFit;
+-            [imageView setFrame:bounds];
++        imageView.contentMode = UIViewContentModeScaleAspectFit;
++        [imageView setFrame:bounds];
+ 
+-            // NOTE: sizeToFit doesn't work instead. Not sure why.
+-            // TODO: Doing it this way is not ideal because it causes things to reshuffle
+-            //       when the image loads IF the image is larger than the UIView.
+-            //       Shouldn't required images have size info automatically via RN?
+-            CGRect selfBounds = unionRect(bounds, self.bounds);
+-            [strongSelf setFrame:selfBounds];
++        CGRect selfBounds = unionRect(bounds, strongSelf.bounds);
++        [strongSelf setFrame:selfBounds];
+ 
+-            strongSelf->_iconImageView = imageView;
+-            [strongSelf iconViewInsertSubview:imageView atIndex:0];
+-            [strongSelf layoutSubviews];
++        strongSelf->_iconImageView = imageView;
++        [strongSelf iconViewInsertSubview:imageView atIndex:0];
++        [strongSelf layoutSubviews];
++        if (strongSelf.realMarker) {
+             [strongSelf.realMarker setIconView:strongSelf.iconView];
+-        });
+-    }];
++        }
++    });
+ }
+ 
+ - (void)setIconSrc:(NSString *)iconSrc
+@@ -426,29 +535,35 @@ - (void)setIconSrc:(NSString *)iconSrc
+         _reloadImageCancellationBlock = nil;
+     }
+ 
+-    if (!_realMarker.icon) {
+-        // prevent glitch with marker (cf. https://github.com/react-native-maps/react-native-maps/issues/3657)
+-        UIImage *emptyImage = [[UIImage alloc] init];
+-        _realMarker.icon = emptyImage;
++    if (!_iconSrc) {
++        _loadedIcon = nil;
++        return;
++    }
++
++    // Prefer sync cache/file hit so the marker never appears as the default pin.
++    UIImage *ready = AIRGoogleMapImageFromURISync(_iconSrc);
++    if (ready) {
++        [self air_applyLoadedIcon:ready];
++        return;
++    }
++
++    // Keep off-map (or hide) until the custom bitmap is ready. An empty
++    // UIImage placeholder makes Google Maps draw the default red pin.
++    if (_realMarker) {
++        _realMarker.map = nil;
+     }
+ 
+-    _reloadImageCancellationBlock =
+-    [[[RCTBridge currentBridge] moduleForName:@"ImageLoader"] loadImageWithURLRequest:[RCTConvert NSURLRequest:_iconSrc]
+-                                                               size:self.bounds.size
+-                                                              scale:RCTScreenScale()
+-                                                            clipped:YES
+-                                                         resizeMode:RCTResizeModeCenter
+-                                                      progressBlock:nil
+-                                                   partialLoadBlock:nil
+-                                                    completionBlock:^(NSError *error, UIImage *image) {
++    __weak AIRGoogleMapMarker *weakSelf = self;
++    _reloadImageCancellationBlock = AIRGoogleMapLoadImage(_iconSrc, ^(UIImage *image, NSError *error) {
+         if (error) {
+-            // TODO(lmr): do something with the error?
+-            NSLog(@"%@", error);
++            NSLog(@"AIRGoogleMapMarker icon load failed: %@", error);
++        }
++        __strong AIRGoogleMapMarker *strongSelf = weakSelf;
++        if (!strongSelf || !image) {
++            return;
+         }
+-        dispatch_async(dispatch_get_main_queue(), ^{
+-            self->_realMarker.icon = image;
+-        });
+-    }];
++        [strongSelf air_applyLoadedIcon:image];
++    });
+ }
+ 
+ - (void)setTitle:(NSString *)title {
+diff --git a/node_modules/react-native-maps/ios/AirMaps/AIRMapMarker.m b/node_modules/react-native-maps/ios/AirMaps/AIRMapMarker.m
+index 89dfd9a..9392a07 100644
+--- a/node_modules/react-native-maps/ios/AirMaps/AIRMapMarker.m
++++ b/node_modules/react-native-maps/ios/AirMaps/AIRMapMarker.m
+@@ -9,22 +9,95 @@
+ 
+ #import "AIRMapMarker.h"
+ 
+-#import <React/RCTBridge.h>
+ #import <React/RCTEventDispatcher.h>
+-#import <React/RCTImageLoaderProtocol.h>
+ #import <React/RCTUtils.h>
+ #import <React/UIView+React.h>
+-#import <React/RCTImageLoader.h>
+-#import <React/RCTBridge+Private.h>
+ 
+ NSInteger const AIR_CALLOUT_OPEN_ZINDEX_BASELINE = 999;
+ 
++static NSCache<NSString *, UIImage *> *AIRMapIconCache(void) {
++    static NSCache<NSString *, UIImage *> *cache;
++    static dispatch_once_t onceToken;
++    dispatch_once(&onceToken, ^{
++        cache = [[NSCache alloc] init];
++        cache.countLimit = 256;
++    });
++    return cache;
++}
++
++static UIImage *AIRMapImageFromURISync(NSString *uri) {
++    if (uri.length == 0) {
++        return nil;
++    }
++    UIImage *cached = [AIRMapIconCache() objectForKey:uri];
++    if (cached) {
++        return cached;
++    }
++    if ([uri hasPrefix:@"data:"]) {
++        NSRange comma = [uri rangeOfString:@","];
++        if (comma.location == NSNotFound) {
++            return nil;
++        }
++        NSString *b64 = [uri substringFromIndex:comma.location + 1];
++        NSData *data = [[NSData alloc] initWithBase64EncodedString:b64
++                                                           options:NSDataBase64DecodingIgnoreUnknownCharacters];
++        UIImage *image = data ? [UIImage imageWithData:data scale:RCTScreenScale()] : nil;
++        if (image) {
++            [AIRMapIconCache() setObject:image forKey:uri];
++        }
++        return image;
++    }
++    NSURL *url = [NSURL URLWithString:uri];
++    if (!url.isFileURL) {
++        return nil;
++    }
++    NSData *data = [NSData dataWithContentsOfFile:url.path];
++    UIImage *image = data ? [UIImage imageWithData:data scale:RCTScreenScale()] : nil;
++    if (image) {
++        [AIRMapIconCache() setObject:image forKey:uri];
++    }
++    return image;
++}
++
++static void (^AIRMapLoadImage(NSString *uri, void (^completion)(UIImage *image, NSError *error)))(void) {
++    if (uri.length == 0) {
++        completion(nil, nil);
++        return ^{};
++    }
++    UIImage *ready = AIRMapImageFromURISync(uri);
++    if (ready) {
++        completion(ready, nil);
++        return ^{};
++    }
++    NSURL *url = [NSURL URLWithString:uri];
++    if (url == nil) {
++        completion(nil, [NSError errorWithDomain:@"AIRMapMarker" code:1 userInfo:nil]);
++        return ^{};
++    }
++    NSURLSessionDataTask *task =
++        [[NSURLSession sharedSession] dataTaskWithURL:url
++                                    completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
++            UIImage *image = nil;
++            if (data != nil && error == nil) {
++                image = [UIImage imageWithData:data scale:RCTScreenScale()];
++                if (image) {
++                    [AIRMapIconCache() setObject:image forKey:uri];
++                }
++            }
++            dispatch_async(dispatch_get_main_queue(), ^{
++                completion(image, error);
++            });
++        }];
++    [task resume];
++    return ^{ [task cancel]; };
++}
++
+ @implementation AIREmptyCalloutBackgroundView
+ @end
+ 
+ @implementation AIRMapMarker {
+     BOOL _hasSetCalloutOffset;
+-    RCTImageLoaderCancellationBlock _reloadImageCancellationBlock;
++    void (^_reloadImageCancellationBlock)(void);
+     MKMarkerAnnotationView *_markerView;
+     MKPinAnnotationView *_pinView;
+     BOOL _calloutIsOpen;
+@@ -366,25 +439,29 @@ - (void)setImageSrc:(NSString *)imageSrc
+         _reloadImageCancellationBlock();
+         _reloadImageCancellationBlock = nil;
+     }
+-    __weak __typeof(self) weakSelf = self;
+ 
+-    _reloadImageCancellationBlock = [[[RCTBridge currentBridge] moduleForName:@"ImageLoader"] loadImageWithURLRequest:[RCTConvert NSURLRequest:_imageSrc]
+-                                                                                                                 size:self.bounds.size
+-                                                                                                                scale:RCTScreenScale()
+-                                                                                                              clipped:YES
+-                                                                                                           resizeMode:RCTResizeModeCenter
+-                                                                                                        progressBlock:nil
+-                                                                                                     partialLoadBlock:nil
+-                                                                                                      completionBlock:^(NSError *error, UIImage *image) {
++    if (!_imageSrc) {
++        return;
++    }
++
++    // Bridgeless-safe load (RCTBridge ImageLoader is nil under New Arch).
++    UIImage *ready = AIRMapImageFromURISync(_imageSrc);
++    if (ready) {
++        self.image = ready;
++        return;
++    }
++
++    __weak __typeof(self) weakSelf = self;
++    _reloadImageCancellationBlock = AIRMapLoadImage(_imageSrc, ^(UIImage *image, NSError *error) {
+         if (error) {
+-            // TODO(lmr): do something with the error?
+             NSLog(@"failed to load image: %@", error);
+         }
+-        dispatch_async(dispatch_get_main_queue(), ^{
+-            __strong __typeof(weakSelf) strongSelf = weakSelf;
+-            strongSelf.image = image;
+-        });
+-    }];
++        __strong __typeof(weakSelf) strongSelf = weakSelf;
++        if (!strongSelf || !image) {
++            return;
++        }
++        strongSelf.image = image;
++    });
+ }
+ 
+ - (void)setPinColor:(UIColor *)pinColor

@@ -1,5 +1,12 @@
 import { Image, StyleSheet, Text, View } from 'react-native';
 
+import {
+  PIN_ICON_TOTAL_HEIGHT,
+  PIN_LABEL_BOX_HEIGHT,
+  PIN_LABEL_GAP,
+  PIN_MAP_HEIGHT,
+  PIN_MAP_WIDTH,
+} from '@/features/map/pinIconLayout';
 import type { PinStyle } from '@/types/settings';
 import { AMPECO_BLUE } from '@/theme/colors';
 
@@ -10,15 +17,10 @@ type Props = {
   powerLabel?: PinPowerLabel;
 };
 
-const PIN_W = 56;
-const PIN_H = (370 / 300) * PIN_W;
-const LABEL_TOP = (248 / 370) * PIN_H;
-const LABEL_FONT = (25 / 300) * PIN_W;
-
 const GREEN_RING = '#8fbc7a';
 
 /**
- * - pin: full teardrop + power label
+ * - pin: teardrop + AC/DC caption under the tip (matches map marker)
  * - dot: compact branded circle
  */
 export function PinGlyph({ style, powerLabel = 'AC' }: Props) {
@@ -45,37 +47,48 @@ export function PinGlyph({ style, powerLabel = 'AC' }: Props) {
         style={styles.pinBody}
         resizeMode="contain"
       />
-      <Text
-        style={styles.power}
-        numberOfLines={1}
-        adjustsFontSizeToFit
-        minimumFontScale={0.7}
-      >
-        {powerLabel}
-      </Text>
+      <View style={styles.captionSoft}>
+        <View style={styles.captionBox}>
+          <Text style={styles.captionText} numberOfLines={1}>
+            {powerLabel}
+          </Text>
+        </View>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   pinWrap: {
-    width: PIN_W,
-    height: PIN_H,
+    width: PIN_MAP_WIDTH,
+    height: PIN_ICON_TOTAL_HEIGHT,
+    alignItems: 'center',
   },
   pinBody: {
-    width: PIN_W,
-    height: PIN_H,
+    width: PIN_MAP_WIDTH,
+    height: PIN_MAP_HEIGHT,
   },
-  power: {
-    position: 'absolute',
-    top: LABEL_TOP,
-    left: 6,
-    right: 6,
-    textAlign: 'center',
+  captionSoft: {
+    marginTop: PIN_LABEL_GAP,
+    paddingHorizontal: 2,
+    paddingVertical: 1.5,
+    borderRadius: 5,
+    backgroundColor: 'rgba(0,0,0,0.18)',
+  },
+  captionBox: {
+    minWidth: 22,
+    height: PIN_LABEL_BOX_HEIGHT,
+    paddingHorizontal: 5,
+    borderRadius: 4,
+    backgroundColor: 'rgba(17,17,17,0.92)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  captionText: {
     color: '#ffffff',
-    fontSize: LABEL_FONT,
-    fontWeight: '700',
-    letterSpacing: 0.5,
+    fontSize: 9,
+    fontWeight: '600',
+    textAlign: 'center',
   },
   dotWrap: {
     width: 40,

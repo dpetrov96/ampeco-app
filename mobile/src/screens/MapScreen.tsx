@@ -18,6 +18,7 @@ import { MyLocationButton } from '@/components/MyLocationButton';
 import { OfflineBanner } from '@/components/OfflineBanner';
 import { PinBottomSheet } from '@/components/PinBottomSheet';
 import { PinMarker } from '@/components/PinMarker';
+import { HAS_GOOGLE_MAPS_KEY } from '@/config/maps.generated';
 import {
   createPinClusterIndex,
   getClusterExpansionRegion,
@@ -35,7 +36,6 @@ import { AMPECO_BLUE } from '@/theme/colors';
 import type { MapRegion } from '@/types/map';
 import type { Pin } from '@/types/pin';
 
-// Pins in the interview dataset are scattered worldwide (not centered on Sofia).
 const INITIAL_REGION: MapRegion = {
   latitude: 20,
   longitude: 0,
@@ -46,14 +46,19 @@ const INITIAL_REGION: MapRegion = {
 const REGION_DEBOUNCE_MS = 120;
 const FILTER_COMMIT_DELAY_MS = 40;
 
-// Google Maps Fabric markers are unreliable on iOS New Architecture
-// (clusters stay invisible). Apple Maps renders custom markers correctly.
-const MAP_PROVIDER = Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined;
-
 /**
- * Runs `commit` after drawer animations settle, then `finish` on the next
- * paint so the apply overlay covers the heavy cluster recompute.
+ * With Google key → Google Maps on both platforms.
+ * Without key → Apple Maps on iOS (Android still requests Google; tiles need a key).
+ *
+ * Markers use the cross-platform `image` prop (same custom pin/cluster bitmaps
+ * on Apple and Google). Nested View children stay unreliable on Google Fabric.
  */
+const MAP_PROVIDER = HAS_GOOGLE_MAPS_KEY
+  ? PROVIDER_GOOGLE
+  : Platform.OS === 'ios'
+    ? undefined
+    : PROVIDER_GOOGLE;
+
 function scheduleAfterDrawerSettle(
   commit: () => void,
   finish: () => void,
@@ -139,17 +144,19 @@ export function MapScreen() {
     filteredPins.length > 0 && clusterItems.length === 0 && !isFetching;
 
   const onRegionChangeComplete = (next: Region) => {
+    const mapped: MapRegion = {
+      latitude: next.latitude,
+      longitude: next.longitude,
+      latitudeDelta: next.latitudeDelta,
+      longitudeDelta: next.longitudeDelta,
+    };
+
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
     }
 
     debounceRef.current = setTimeout(() => {
-      setRegion({
-        latitude: next.latitude,
-        longitude: next.longitude,
-        latitudeDelta: next.latitudeDelta,
-        longitudeDelta: next.longitudeDelta,
-      });
+      setRegion(mapped);
     }, REGION_DEBOUNCE_MS);
   };
 
@@ -213,7 +220,7 @@ export function MapScreen() {
             />
           ) : (
             <PinMarker
-              key={item.id}
+              key={`${item.id}:${pinStyle}`}
               pin={item.pin}
               pinStyle={pinStyle}
               onPress={onPinPress}

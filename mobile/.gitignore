@@ -22,6 +22,9 @@ DerivedData
 *.xcuserstate
 **/.xcode.env.local
 
+# Google Maps key (generated from .env — never commit secrets)
+ios/AmpecoPins/GoogleMapsKey.generated.swift
+
 # Android/IntelliJ
 #
 build/

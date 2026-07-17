@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
-import { View } from 'react-native';
 import { Marker } from 'react-native-maps';
 
-import { PinGlyph, type PinPowerLabel } from '@/components/PinGlyph';
-import { useMarkerTracksViewChanges } from '@/hooks/useMarkerTracksViewChanges';
+import type { PinPowerLabel } from '@/components/PinGlyph';
+import { getPinIconUri } from '@/features/map/clusterBadge';
+import { PIN_TIP_ANCHOR_Y } from '@/features/map/pinIconLayout';
 import { ConnectorType, type Pin } from '@/types/pin';
 import type { PinStyle } from '@/types/settings';
 
@@ -19,6 +19,12 @@ const AC_TYPES: ConnectorType[] = [
   ConnectorType.Type3,
 ];
 const DC_TYPES: ConnectorType[] = [ConnectorType.Ccs2];
+
+const DOT_IMAGE = require('@/assets/pins/pin-dot-marker.png') as number;
+/** Fallback if native getPinUri is unavailable (e.g. Jest). */
+const PIN_FALLBACK = require('@/assets/pins/pin-marker.png') as number;
+
+type MarkerIcon = number | { uri: string };
 
 function powerLabel(pin: Pin): PinPowerLabel {
   let hasAc = false;
@@ -42,29 +48,44 @@ function powerLabel(pin: Pin): PinPowerLabel {
   return 'AC';
 }
 
+function pinIconSource(style: PinStyle, label: PinPowerLabel): MarkerIcon {
+  if (style === 'dot') {
+    return DOT_IMAGE;
+  }
+  const uri = getPinIconUri(label);
+  if (uri) {
+    return { uri };
+  }
+  return PIN_FALLBACK;
+}
+
+/**
+ * Marker `image` — same custom pins on Apple Maps and Google Maps.
+ * Pin style composites AC/DC via native Core Text.
+ */
 export function PinMarker({ pin, pinStyle, onPress }: Props) {
   const label = useMemo(() => powerLabel(pin), [pin]);
-  const tracksViewChanges = useMarkerTracksViewChanges(
-    `${pin._id}:${label}:${pinStyle}`,
+  const icon = useMemo(
+    () => pinIconSource(pinStyle, label),
+    [pinStyle, label],
   );
-
   const anchor =
-    pinStyle === 'dot' ? { x: 0.5, y: 0.5 } : { x: 0.5, y: 1 };
+    pinStyle === 'dot'
+      ? { x: 0.5, y: 0.5 }
+      : { x: 0.5, y: PIN_TIP_ANCHOR_Y };
 
   return (
     <Marker
-      identifier={pin._id}
+      identifier={`${pin._id}:${pinStyle}:${label}`}
       coordinate={{ latitude: pin.latitude, longitude: pin.longitude }}
+      image={icon}
       onPress={(event) => {
         event.stopPropagation();
         onPress(pin);
       }}
-      tracksViewChanges={tracksViewChanges}
       anchor={anchor}
-    >
-      <View>
-        <PinGlyph style={pinStyle} powerLabel={label} />
-      </View>
-    </Marker>
+      tracksViewChanges={false}
+      zIndex={1}
+    />
   );
 }

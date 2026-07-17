@@ -12,7 +12,7 @@ import { PIN_STYLES, type PinStyle } from '@/types/settings';
 const STYLE_COPY: Record<PinStyle, { title: string; subtitle: string }> = {
   pin: {
     title: 'Pin',
-    subtitle: 'Full marker with AC/DC label',
+    subtitle: 'Teardrop with AC/DC under the tip',
   },
   dot: {
     title: 'Dot',
@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 14,
-    minHeight: 88,
+    minHeight: 104,
   },
   rowBorder: {
     borderBottomWidth: StyleSheet.hairlineWidth,
@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
   },
   preview: {
     width: 64,
-    height: 72,
+    height: 92,
     marginRight: 12,
     alignItems: 'center',
     justifyContent: 'center',
