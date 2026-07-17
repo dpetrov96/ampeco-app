@@ -1,10 +1,18 @@
-import { useNavigation } from '@react-navigation/native';
+import { DrawerActions, useNavigation } from '@react-navigation/native';
 import type { DrawerNavigationProp } from '@react-navigation/drawer';
-import { useMemo, useRef, useState } from 'react';
-import { Platform, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  InteractionManager,
+  Platform,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import MapView, { PROVIDER_GOOGLE, type Region } from 'react-native-maps';
 
 import { useGetPinsQuery } from '../api';
+import { AMPECO_BLUE } from '../components/AmpecoLoader';
 import { ClusterMarker } from '../components/ClusterMarker';
 import { MapHeaderButtons } from '../components/MapHeaderButtons';
 import { OfflineBanner } from '../components/OfflineBanner';
@@ -18,7 +26,8 @@ import {
 } from '../features/map/clusterPins';
 import { filterPins } from '../features/map/filterPins';
 import type { RightDrawerParamList } from '../navigation/types';
-import { useAppSelector } from '../store/hooks';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { applyFilters, finishApplyFilters } from '../store/slices/filtersSlice';
 import type { MapRegion } from '../types/map';
 import type { Pin } from '../types/pin';
 
@@ -39,14 +48,52 @@ const MAP_PROVIDER = Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined;
 export function MapScreen() {
   const navigation =
     useNavigation<DrawerNavigationProp<RightDrawerParamList, 'MapMain'>>();
+  const dispatch = useAppDispatch();
   const { data: pins = [], isError, isFetching, error } = useGetPinsQuery();
   const appliedFilters = useAppSelector((state) => state.filters.applied);
+  const isApplyingFilters = useAppSelector((state) => state.filters.isApplying);
   const pinStyle = useAppSelector((state) => state.settings.pinStyle);
 
   const mapRef = useRef<MapView>(null);
   const [region, setRegion] = useState<MapRegion>(INITIAL_REGION);
   const [selectedPin, setSelectedPin] = useState<Pin | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!isApplyingFilters) {
+      return;
+    }
+
+    navigation.dispatch(DrawerActions.closeDrawer());
+
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    let raf1 = 0;
+    let raf2 = 0;
+
+    const handle = InteractionManager.runAfterInteractions(() => {
+      timeoutId = setTimeout(() => {
+        dispatch(applyFilters());
+        raf1 = requestAnimationFrame(() => {
+          raf2 = requestAnimationFrame(() => {
+            dispatch(finishApplyFilters());
+          });
+        });
+      }, 40);
+    });
+
+    return () => {
+      handle.cancel();
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      if (raf1) {
+        cancelAnimationFrame(raf1);
+      }
+      if (raf2) {
+        cancelAnimationFrame(raf2);
+      }
+    };
+  }, [isApplyingFilters, dispatch, navigation]);
 
   const filteredPins = useMemo(
     () => filterPins(pins, appliedFilters),
@@ -172,6 +219,15 @@ export function MapScreen() {
       ) : null}
 
       <PinBottomSheet pin={selectedPin} />
+
+      {isApplyingFilters ? (
+        <View style={styles.loadingOverlay} pointerEvents="auto">
+          <View style={styles.loadingCard}>
+            <ActivityIndicator size="large" color={AMPECO_BLUE} />
+            <Text style={styles.loadingText}>Updating map…</Text>
+          </View>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -195,5 +251,30 @@ const styles = StyleSheet.create({
   statusText: {
     color: '#ffffff',
     fontSize: 13,
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: 'rgba(242, 242, 247, 0.55)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 50,
+  },
+  loadingCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    paddingHorizontal: 28,
+    paddingVertical: 22,
+    alignItems: 'center',
+    gap: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+  },
+  loadingText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#111111',
   },
 });

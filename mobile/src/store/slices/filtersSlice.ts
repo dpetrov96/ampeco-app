@@ -15,6 +15,7 @@ export type FilterSelection = {
 type FiltersState = {
   draft: FilterSelection;
   applied: FilterSelection;
+  isApplying: boolean;
 };
 
 const allFilters: FilterSelection = {
@@ -28,6 +29,7 @@ const initialState: FiltersState = {
     types: [...allFilters.types],
     statuses: [...allFilters.statuses],
   },
+  isApplying: false,
 };
 
 const filtersSlice = createSlice({
@@ -37,6 +39,9 @@ const filtersSlice = createSlice({
     toggleDraftType(state, action: PayloadAction<ConnectorType>) {
       const type = action.payload;
       if (state.draft.types.includes(type)) {
+        if (state.draft.types.length === 1) {
+          return;
+        }
         state.draft.types = state.draft.types.filter((item) => item !== type);
       } else {
         state.draft.types.push(type);
@@ -45,6 +50,9 @@ const filtersSlice = createSlice({
     toggleDraftStatus(state, action: PayloadAction<ConnectorStatus>) {
       const status = action.payload;
       if (state.draft.statuses.includes(status)) {
+        if (state.draft.statuses.length === 1) {
+          return;
+        }
         state.draft.statuses = state.draft.statuses.filter(
           (item) => item !== status,
         );
@@ -52,11 +60,17 @@ const filtersSlice = createSlice({
         state.draft.statuses.push(status);
       }
     },
+    beginApplyFilters(state) {
+      state.isApplying = true;
+    },
     applyFilters(state) {
       state.applied = {
         types: [...state.draft.types],
         statuses: [...state.draft.statuses],
       };
+    },
+    finishApplyFilters(state) {
+      state.isApplying = false;
     },
     resetDraftToApplied(state) {
       state.draft = {
@@ -70,7 +84,9 @@ const filtersSlice = createSlice({
 export const {
   toggleDraftType,
   toggleDraftStatus,
+  beginApplyFilters,
   applyFilters,
+  finishApplyFilters,
   resetDraftToApplied,
 } = filtersSlice.actions;
 

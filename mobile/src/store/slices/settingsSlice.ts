@@ -7,7 +7,7 @@ type SettingsState = {
 };
 
 const initialState: SettingsState = {
-  pinStyle: 'default',
+  pinStyle: 'pin',
 };
 
 const settingsSlice = createSlice({

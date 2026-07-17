@@ -1,6 +1,6 @@
 import { DrawerActions } from '@react-navigation/native';
 import type { DrawerNavigationProp } from '@react-navigation/drawer';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, View } from 'react-native';
 
 import type { RightDrawerParamList } from '../navigation/types';
 
@@ -25,7 +25,11 @@ export function MapHeaderButtons({ navigation }: Props) {
         onPress={openLeftDrawer}
         style={({ pressed }) => [styles.button, pressed && styles.pressed]}
       >
-        <Text style={styles.icon}>☰</Text>
+        <Image
+          source={require('../assets/icons/settings.png')}
+          style={styles.icon}
+          resizeMode="contain"
+        />
       </Pressable>
       <Pressable
         accessibilityRole="button"
@@ -33,7 +37,11 @@ export function MapHeaderButtons({ navigation }: Props) {
         onPress={openRightDrawer}
         style={({ pressed }) => [styles.button, pressed && styles.pressed]}
       >
-        <Text style={styles.icon}>⚙</Text>
+        <Image
+          source={require('../assets/icons/filter.png')}
+          style={styles.icon}
+          resizeMode="contain"
+        />
       </Pressable>
     </View>
   );
@@ -66,8 +74,7 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   icon: {
-    fontSize: 20,
-    color: '#ffffff',
-    lineHeight: 22,
+    width: 22,
+    height: 22,
   },
 });
