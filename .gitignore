@@ -16,6 +16,10 @@ dist/
 .env.*
 !.env.example
 
+# Generated maps config (from mobile/.env via sync-maps-key)
+mobile/src/config/maps.generated.ts
+mobile/ios/Ampeco/GoogleMapsKey.generated.swift
+
 # Native / build
 *.log
 npm-debug.*

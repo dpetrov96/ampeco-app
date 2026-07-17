@@ -24,6 +24,7 @@ DerivedData
 
 # Google Maps key (generated from .env — never commit secrets)
 ios/Ampeco/GoogleMapsKey.generated.swift
+src/config/maps.generated.ts
 
 # Android/IntelliJ
 #
