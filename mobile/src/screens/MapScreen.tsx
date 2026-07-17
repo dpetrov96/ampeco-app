@@ -1,9 +1,8 @@
-import { DrawerActions, useNavigation } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import type { DrawerNavigationProp } from '@react-navigation/drawer';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  InteractionManager,
   Platform,
   StyleSheet,
   Text,
@@ -23,28 +22,23 @@ import {
   createPinClusterIndex,
   getClusterExpansionRegion,
   getClustersForRegion,
-  getPinFocusRegion,
 } from '@/features/map/clusterPins';
 import { filterPins } from '@/features/map/filterPins';
-import type { RightDrawerParamList } from '@/navigation/types';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
-  commitApplyFilters,
-  finishApplyFilters,
-} from '@/store/slices/filtersSlice';
+  FALLBACK_INITIAL_REGION,
+  findInitialMapRegion,
+} from '@/features/map/initialRegion';
+import type { RightDrawerParamList } from '@/navigation/types';
+import { useAppSelector } from '@/store/hooks';
 import { AMPECO_BLUE } from '@/theme/colors';
 import type { MapRegion } from '@/types/map';
 import type { Pin } from '@/types/pin';
+import {
+  ensureLocationPermission,
+  getCurrentPositionCoords,
+} from '@/utils/location';
 
-const INITIAL_REGION: MapRegion = {
-  latitude: 20,
-  longitude: 0,
-  latitudeDelta: 90,
-  longitudeDelta: 90,
-};
-
-const REGION_DEBOUNCE_MS = 120;
-const FILTER_COMMIT_DELAY_MS = 40;
+const REGION_DEBOUNCE_MS = 180;
 
 /**
  * With Google key → Google Maps on both platforms.
@@ -59,68 +53,71 @@ const MAP_PROVIDER = HAS_GOOGLE_MAPS_KEY
     ? undefined
     : PROVIDER_GOOGLE;
 
-function scheduleAfterDrawerSettle(
-  commit: () => void,
-  finish: () => void,
-): () => void {
-  let timeoutId: ReturnType<typeof setTimeout> | undefined;
-  let raf1 = 0;
-  let raf2 = 0;
-
-  const handle = InteractionManager.runAfterInteractions(() => {
-    timeoutId = setTimeout(() => {
-      commit();
-      raf1 = requestAnimationFrame(() => {
-        raf2 = requestAnimationFrame(finish);
-      });
-    }, FILTER_COMMIT_DELAY_MS);
-  });
-
-  return () => {
-    handle.cancel();
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
-    if (raf1) {
-      cancelAnimationFrame(raf1);
-    }
-    if (raf2) {
-      cancelAnimationFrame(raf2);
-    }
-  };
-}
-
 export function MapScreen() {
   const navigation =
     useNavigation<DrawerNavigationProp<RightDrawerParamList, 'MapMain'>>();
-  const dispatch = useAppDispatch();
   const { data: pins = [], isError, isFetching, error } = useGetPinsQuery();
   const appliedFilters = useAppSelector((state) => state.filters.applied);
   const isApplyingFilters = useAppSelector((state) => state.filters.isApplying);
   const pinStyle = useAppSelector((state) => state.settings.pinStyle);
 
   const mapRef = useRef<MapView>(null);
-  const [region, setRegion] = useState<MapRegion>(INITIAL_REGION);
+  const didApplyInitialFocus = useRef(false);
+  const [region, setRegion] = useState<MapRegion>(FALLBACK_INITIAL_REGION);
   const [selectedPin, setSelectedPin] = useState<Pin | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    if (!isApplyingFilters) {
-      return;
-    }
-
-    navigation.dispatch(DrawerActions.closeDrawer());
-
-    return scheduleAfterDrawerSettle(
-      () => dispatch(commitApplyFilters()),
-      () => dispatch(finishApplyFilters()),
-    );
-  }, [isApplyingFilters, dispatch, navigation]);
 
   const filteredPins = useMemo(
     () => filterPins(pins, appliedFilters),
     [pins, appliedFilters],
   );
+
+  // Once pins are loaded, center on nearest area with pins (prefer same country).
+  useEffect(() => {
+    if (didApplyInitialFocus.current || filteredPins.length === 0) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const focusNearUser = async () => {
+      try {
+        const granted = await ensureLocationPermission();
+        if (cancelled) {
+          return;
+        }
+
+        if (!granted) {
+          didApplyInitialFocus.current = true;
+          return;
+        }
+
+        const coords = await getCurrentPositionCoords();
+        if (cancelled) {
+          return;
+        }
+
+        const next = findInitialMapRegion(
+          coords.latitude,
+          coords.longitude,
+          filteredPins,
+        );
+        didApplyInitialFocus.current = true;
+        mapRef.current?.animateToRegion(next, 450);
+        setRegion(next);
+      } catch {
+        if (!cancelled) {
+          didApplyInitialFocus.current = true;
+        }
+      }
+    };
+
+    void focusNearUser();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [filteredPins]);
 
   const pinsById = useMemo(() => {
     const map = new Map<string, Pin>();
@@ -177,8 +174,15 @@ export function MapScreen() {
   };
 
   const onPinPress = (pin: Pin) => {
-    const next = getPinFocusRegion(pin, region);
-    mapRef.current?.animateToRegion(next, 280);
+    // Pan only — keep current zoom so neighbouring pins stay in the viewport.
+    // Nudge center south so the pin sits above the bottom sheet.
+    const next: MapRegion = {
+      latitude: pin.latitude - region.latitudeDelta * 0.2,
+      longitude: pin.longitude,
+      latitudeDelta: region.latitudeDelta,
+      longitudeDelta: region.longitudeDelta,
+    };
+    mapRef.current?.animateToRegion(next, 300);
     setRegion(next);
     setSelectedPin(pin);
   };
@@ -195,7 +199,7 @@ export function MapScreen() {
         ref={mapRef}
         style={styles.map}
         provider={MAP_PROVIDER}
-        initialRegion={INITIAL_REGION}
+        initialRegion={FALLBACK_INITIAL_REGION}
         onRegionChangeComplete={onRegionChangeComplete}
         showsUserLocation
         showsMyLocationButton={false}

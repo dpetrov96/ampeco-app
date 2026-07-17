@@ -14,7 +14,7 @@ export type FilterSelection = {
 
 type FiltersState = {
   applied: FilterSelection;
-  /** Selection waiting to be committed after the apply overlay/drawer close. */
+  /** Selection waiting to be committed after the drawer starts closing. */
   pending: FilterSelection | null;
   isApplying: boolean;
 };
@@ -37,7 +37,7 @@ const filtersSlice = createSlice({
   name: 'filters',
   initialState,
   reducers: {
-    /** Drawer commits local UI selection and asks MapScreen to apply it. */
+    /** Drawer asks to apply; commit happens shortly after closeDrawer. */
     requestApplyFilters(state, action: PayloadAction<FilterSelection>) {
       state.pending = {
         types: [...action.payload.types],
@@ -45,7 +45,7 @@ const filtersSlice = createSlice({
       };
       state.isApplying = true;
     },
-    /** MapScreen commits pending → applied once the UI has settled. */
+    /** Commits pending → applied once the drawer has started closing. */
     commitApplyFilters(state) {
       if (state.pending) {
         state.applied = {

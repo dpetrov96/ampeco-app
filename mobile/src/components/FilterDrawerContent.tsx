@@ -3,7 +3,7 @@ import {
   DrawerContentScrollView,
   useDrawerStatus,
 } from '@react-navigation/drawer';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -15,7 +15,11 @@ import {
 
 import { CONNECTOR_ICONS } from '@/constants/connectorIcons';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { requestApplyFilters } from '@/store/slices/filtersSlice';
+import {
+  commitApplyFilters,
+  finishApplyFilters,
+  requestApplyFilters,
+} from '@/store/slices/filtersSlice';
 import { AMPECO_BLUE } from '@/theme/colors';
 import {
   CONNECTOR_STATUSES,
@@ -98,6 +102,8 @@ export function FilterDrawerContent(props: DrawerContentComponentProps) {
   const applied = useAppSelector((state) => state.filters.applied);
   const isApplying = useAppSelector((state) => state.filters.isApplying);
   const drawerStatus = useDrawerStatus();
+  const appliedRef = useRef(applied);
+  appliedRef.current = applied;
 
   // Local draft only — Redux stores applied (+ pending during apply).
   const [types, setTypes] = useState<ConnectorType[]>(() => [...applied.types]);
@@ -105,12 +111,14 @@ export function FilterDrawerContent(props: DrawerContentComponentProps) {
     ...applied.statuses,
   ]);
 
+  // Sync draft when the drawer opens — not when applied changes mid-close
+  // (that re-render fight was reopening / freezing the drawer).
   useEffect(() => {
     if (drawerStatus === 'open') {
-      setTypes([...applied.types]);
-      setStatuses([...applied.statuses]);
+      setTypes([...appliedRef.current.types]);
+      setStatuses([...appliedRef.current.statuses]);
     }
-  }, [drawerStatus, applied]);
+  }, [drawerStatus]);
 
   const toggleType = (type: ConnectorType) => {
     setTypes((current) => {
@@ -140,7 +148,16 @@ export function FilterDrawerContent(props: DrawerContentComponentProps) {
     if (isApplying) {
       return;
     }
+
     dispatch(requestApplyFilters({ types, statuses }));
+    props.navigation.closeDrawer();
+
+    // Commit after close animation starts. Avoid InteractionManager — map
+    // updates keep it pending and previously cancelled finish left the drawer stuck.
+    setTimeout(() => {
+      dispatch(commitApplyFilters());
+      dispatch(finishApplyFilters());
+    }, 220);
   };
 
   return (

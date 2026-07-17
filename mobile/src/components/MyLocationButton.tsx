@@ -1,17 +1,18 @@
-import Geolocation from '@react-native-community/geolocation';
 import { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   Image,
-  PermissionsAndroid,
-  Platform,
   Pressable,
   StyleSheet,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { MapRegion } from '@/types/map';
+import {
+  ensureLocationPermission,
+  getCurrentPositionCoords,
+} from '@/utils/location';
 
 const LOCATION_DELTA = 0.02;
 
@@ -20,29 +21,6 @@ type Props = {
   /** Extra bottom offset when a bottom sheet is open. */
   bottomOffset?: number;
 };
-
-async function ensureLocationPermission(): Promise<boolean> {
-  if (Platform.OS === 'ios') {
-    return new Promise((resolve) => {
-      Geolocation.requestAuthorization(
-        () => resolve(true),
-        () => resolve(false),
-      );
-    });
-  }
-
-  const result = await PermissionsAndroid.request(
-    PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-    {
-      title: 'Location permission',
-      message: 'Allow access to your location to center the map on you.',
-      buttonPositive: 'Allow',
-      buttonNegative: 'Deny',
-    },
-  );
-
-  return result === PermissionsAndroid.RESULTS.GRANTED;
-}
 
 export function MyLocationButton({ onLocate, bottomOffset = 0 }: Props) {
   const insets = useSafeAreaInsets();
@@ -66,31 +44,20 @@ export function MyLocationButton({ onLocate, bottomOffset = 0 }: Props) {
         return;
       }
 
-      Geolocation.getCurrentPosition(
-        (position) => {
-          onLocate({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-            latitudeDelta: LOCATION_DELTA,
-            longitudeDelta: LOCATION_DELTA,
-          });
-          setIsLocating(false);
-        },
-        (error) => {
-          Alert.alert(
-            'Could not get location',
-            error.message || 'Please try again.',
-          );
-          setIsLocating(false);
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 15000,
-          maximumAge: 10000,
-        },
-      );
-    } catch {
-      Alert.alert('Could not get location', 'Please try again.');
+      const coords = await getCurrentPositionCoords();
+      onLocate({
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        latitudeDelta: LOCATION_DELTA,
+        longitudeDelta: LOCATION_DELTA,
+      });
+    } catch (error) {
+      const message =
+        error && typeof error === 'object' && 'message' in error
+          ? String((error as { message: string }).message)
+          : 'Please try again.';
+      Alert.alert('Could not get location', message);
+    } finally {
       setIsLocating(false);
     }
   };

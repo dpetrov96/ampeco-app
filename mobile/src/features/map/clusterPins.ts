@@ -40,18 +40,20 @@ export type MapClusterItem =
     };
 
 /**
- * Supercluster radius is in projected tile pixels (extent 512).
- * Pin markers are ~64px on a ~390px phone ≈ ~84 tile px, so radius must be
- * at least that or singles sit under neighbouring clusters.
+ * Supercluster radius (tile px, extent 512). ~70 balances regional clusters
+ * when zoomed out vs not flooding the map with singles.
  */
 const CLUSTER_OPTIONS: Supercluster.Options<
   PinPointProperties,
   ClusterProperties
 > = {
-  radius: 96,
+  radius: 72,
   maxZoom: 16,
   minPoints: 2,
 };
+
+/** Hard cap — more native markers than this freezes react-native-maps. */
+export const MAX_VISIBLE_MARKERS = 72;
 
 /** Assumed map width for post-cluster declutter (screen px). */
 const VIEWPORT_WIDTH_PX = 390;
@@ -60,7 +62,7 @@ const VIEWPORT_WIDTH_PX = 390;
  * Minimum gap between marker centres. Below this, absorb/merge so pins and
  * clusters do not stack (same idea as Mapbox/Google map declutter).
  */
-const MIN_MARKER_GAP_PX = 58;
+const MIN_MARKER_GAP_PX = 56;
 
 export function createPinClusterIndex(
   pins: Pin[],
@@ -109,6 +111,12 @@ export function declutterClusterItems(
   items: MapClusterItem[],
   region: MapRegion,
 ): MapClusterItem[] {
+  // At very wide zooms, Supercluster already returns coarse clusters; screen-px
+  // merge would collapse them into a few mega-blobs again.
+  if (region.longitudeDelta >= 25 || region.latitudeDelta >= 25) {
+    return items;
+  }
+
   type ClusterItem = Extract<MapClusterItem, { kind: 'cluster' }>;
   type PinItem = Extract<MapClusterItem, { kind: 'pin' }>;
 
@@ -178,21 +186,24 @@ export function declutterClusterItems(
   return [...mergedClusters, ...remainingPins];
 }
 
-export function getClustersForRegion(
-  index: Supercluster<PinPointProperties, ClusterProperties>,
-  pinsById: Map<string, Pin>,
-  region: MapRegion,
-): MapClusterItem[] {
-  const bounds = regionToBounds(region);
+/**
+ * Camera zoom for Supercluster. Stay close to the real zoom so we do not
+ * spawn hundreds of markers; only a tiny bump when fully zoomed out so the
+ * world is not a single mega-cluster.
+ */
+export function clusterQueryZoom(region: MapRegion): number {
   const zoom = regionToZoom(region);
-  const bbox: [number, number, number, number] = [
-    bounds.west,
-    bounds.south,
-    bounds.east,
-    bounds.north,
-  ];
+  if (zoom <= 1) {
+    return 2;
+  }
+  return zoom;
+}
 
-  const items = index.getClusters(bbox, zoom).flatMap((feature): MapClusterItem[] => {
+function mapClusterFeatures(
+  features: PinFeature[],
+  pinsById: Map<string, Pin>,
+): MapClusterItem[] {
+  return features.flatMap((feature): MapClusterItem[] => {
     const [longitude, latitude] = feature.geometry.coordinates;
     const props = feature.properties;
 
@@ -225,6 +236,29 @@ export function getClustersForRegion(
       },
     ];
   });
+}
+
+export function getClustersForRegion(
+  index: Supercluster<PinPointProperties, ClusterProperties>,
+  pinsById: Map<string, Pin>,
+  region: MapRegion,
+): MapClusterItem[] {
+  const bounds = regionToBounds(region);
+  const bbox: [number, number, number, number] = [
+    bounds.west,
+    bounds.south,
+    bounds.east,
+    bounds.north,
+  ];
+
+  let zoom = clusterQueryZoom(region);
+  let items = mapClusterFeatures(index.getClusters(bbox, zoom), pinsById);
+
+  // Coarsen until native marker count is safe for maps performance.
+  while (items.length > MAX_VISIBLE_MARKERS && zoom > 0) {
+    zoom -= 1;
+    items = mapClusterFeatures(index.getClusters(bbox, zoom), pinsById);
+  }
 
   return declutterClusterItems(items, region);
 }

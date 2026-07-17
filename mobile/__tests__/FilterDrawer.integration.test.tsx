@@ -3,10 +3,6 @@ import { act, render, screen, userEvent } from '@testing-library/react-native';
 import { Provider } from 'react-redux';
 
 import { FilterDrawerContent } from '@/components/FilterDrawerContent';
-import {
-  commitApplyFilters,
-  finishApplyFilters,
-} from '@/store/slices/filtersSlice';
 import { createTestStore } from '@/test/createTestStore';
 import { ConnectorStatus, ConnectorType } from '@/types/pin';
 
@@ -50,13 +46,15 @@ function drawerProps(
 }
 
 describe('FilterDrawerContent (integration)', () => {
-  it('Apply commits connector filters into the store (MapScreen settle path)', async () => {
-    const user = userEvent.setup();
+  it('Apply closes the drawer and commits filters', async () => {
+    jest.useFakeTimers();
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
     const { store } = createTestStore();
+    const props = drawerProps();
 
     await render(
       <Provider store={store}>
-        <FilterDrawerContent {...drawerProps()} />
+        <FilterDrawerContent {...props} />
       </Provider>,
     );
 
@@ -68,16 +66,15 @@ describe('FilterDrawerContent (integration)', () => {
     await user.press(screen.getByText('Unavailable'));
     await user.press(screen.getByText('Apply'));
 
+    expect(props.navigation.closeDrawer).toHaveBeenCalled();
     expect(store.getState().filters.isApplying).toBe(true);
     expect(store.getState().filters.pending).toEqual({
       types: [ConnectorType.Type2],
       statuses: [ConnectorStatus.Available],
     });
 
-    // Same sequence MapScreen runs after closing the drawer.
     await act(async () => {
-      store.dispatch(commitApplyFilters());
-      store.dispatch(finishApplyFilters());
+      jest.advanceTimersByTime(250);
     });
 
     expect(store.getState().filters.isApplying).toBe(false);
@@ -85,5 +82,7 @@ describe('FilterDrawerContent (integration)', () => {
       types: [ConnectorType.Type2],
       statuses: [ConnectorStatus.Available],
     });
+
+    jest.useRealTimers();
   });
 });

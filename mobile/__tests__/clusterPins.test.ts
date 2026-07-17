@@ -4,6 +4,7 @@ import {
   getClusterExpansionRegion,
   getClustersForRegion,
   getPinFocusRegion,
+  MAX_VISIBLE_MARKERS,
   type MapClusterItem,
 } from '@/features/map/clusterPins';
 import { regionToZoom } from '@/features/map/regionZoom';
@@ -31,6 +32,53 @@ describe('clusterPins', () => {
 
   const pinsById = new Map(pins.map((pin) => [pin._id, pin]));
   const index = createPinClusterIndex(pins);
+
+  it('keeps multiple regional clusters when zoomed far out', () => {
+    const spreadPins: Pin[] = [
+      makePin({ _id: 'bg', latitude: 42.7, longitude: 23.3 }),
+      makePin({ _id: 'bg2', latitude: 42.72, longitude: 23.35 }),
+      makePin({ _id: 'de', latitude: 52.5, longitude: 13.4 }),
+      makePin({ _id: 'de2', latitude: 52.52, longitude: 13.45 }),
+      makePin({ _id: 'us', latitude: 40.7, longitude: -74 }),
+      makePin({ _id: 'us2', latitude: 40.72, longitude: -74.02 }),
+      makePin({ _id: 'au', latitude: -33.8, longitude: 151.2 }),
+      makePin({ _id: 'au2', latitude: -33.82, longitude: 151.25 }),
+    ];
+    const spreadIndex = createPinClusterIndex(spreadPins);
+    const spreadById = new Map(spreadPins.map((pin) => [pin._id, pin]));
+    const world: MapRegion = {
+      latitude: 20,
+      longitude: 0,
+      latitudeDelta: 100,
+      longitudeDelta: 160,
+    };
+
+    const items = getClustersForRegion(spreadIndex, spreadById, world);
+    expect(items.length).toBeGreaterThanOrEqual(3);
+    expect(items.length).toBeLessThanOrEqual(MAX_VISIBLE_MARKERS);
+  });
+
+  it('caps visible markers for map performance', () => {
+    const many: Pin[] = Array.from({ length: 300 }, (_, i) =>
+      makePin({
+        _id: `p-${i}`,
+        latitude: (i % 20) * 8 - 80,
+        longitude: Math.floor(i / 20) * 12 - 170,
+      }),
+    );
+    const manyIndex = createPinClusterIndex(many);
+    const manyById = new Map(many.map((pin) => [pin._id, pin]));
+    const world: MapRegion = {
+      latitude: 0,
+      longitude: 0,
+      latitudeDelta: 120,
+      longitudeDelta: 200,
+    };
+
+    const items = getClustersForRegion(manyIndex, manyById, world);
+    expect(items.length).toBeLessThanOrEqual(MAX_VISIBLE_MARKERS);
+    expect(items.some((item) => item.kind === 'cluster')).toBe(true);
+  });
 
   it('clusters nearby pins at a low zoom', () => {
     const region: MapRegion = {
